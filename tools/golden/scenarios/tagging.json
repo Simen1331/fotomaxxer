@@ -1,0 +1,11 @@
+[
+  ["tag"],
+  ["settings", "set", "openrouter_api_key", "sk-or-v1-falsk-0123456789"],
+  ["settings", "set", "ai_model", "test/fake-vision"],
+  ["tag", "--limit", "5", "--workers", "1"],
+  ["tag", "--workers", "1"],
+  ["tag", "--workers", "1"],
+  ["settings", "set", "default_profile_id", "3"],
+  ["tag", "--retag", "--yes", "--workers", "1"],
+  ["settings", "list"]
+]

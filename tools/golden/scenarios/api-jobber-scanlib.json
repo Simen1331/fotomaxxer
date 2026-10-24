@@ -1,0 +1,265 @@
+{
+ "beskrivelse": "Jobber på en ny, tom pakke med scanlib (210 filer): kilder, scan per kilde og alle, derive per kilde og alle (byte-like thumbnails), faces-detect med «opptatt»-svar underveis, klynging, «Oppdater alt» per kilde uten nøkkel, progress/cost med og uten source_id. Ansiktsdeteksjon er ikke bit-lik med Python (se «Resultat fra fase 4»), så embeddings, bbox, klyngetilordning og persons maskeres i databasen, og persons_total sammenlignes ikke etter klyngingen; antall ansikter og statusene sammenlignes. Feiltekstene fra derive avviker (kjent fra fase 3), så processing_state.error maskeres",
+ "mask_errors": true,
+ "mask_sql": [
+  "UPDATE faces SET embedding = x'00', bbox = '[]', cluster_id = NULL",
+  "DELETE FROM persons"
+ ],
+ "steps": [
+  {
+   "name": "kilde a",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/a"
+   }
+  },
+  {
+   "name": "kilde b",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/b"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "skann kilde b",
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "json": {
+    "source_id": 2
+   },
+   "wait": true
+  },
+  {
+   "name": "status etter skann b",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress",
+   "query": {
+    "source_id": 2
+   }
+  },
+  {
+   "name": "skann alle",
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "json": {
+    "all": true
+   },
+   "wait": true
+  },
+  {
+   "name": "status etter skann alle",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/sources"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress",
+   "query": {
+    "source_id": 1
+   }
+  },
+  {
+   "name": "derive kilde b",
+   "method": "POST",
+   "path": "/api/jobs/derive",
+   "json": {
+    "source_id": 2,
+    "workers": 2
+   },
+   "wait": true
+  },
+  {
+   "name": "status etter derive b",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress",
+   "query": {
+    "source_id": 2
+   }
+  },
+  {
+   "name": "derive resten",
+   "method": "POST",
+   "path": "/api/jobs/derive",
+   "json": {},
+   "wait": true
+  },
+  {
+   "name": "status etter derive",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  },
+  {
+   "check_files": "{pakke}/derived",
+   "hash": true,
+   "mtime": false
+  },
+  {
+   "name": "faces-detect (lang jobb)",
+   "method": "POST",
+   "path": "/api/jobs/faces-detect",
+   "json": {
+    "workers": 4
+   },
+   "expect_status": 202
+  },
+  {
+   "name": "opptatt: scan",
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "json": {},
+   "expect_status": 409
+  },
+  {
+   "name": "opptatt: update",
+   "method": "POST",
+   "path": "/api/jobs/update",
+   "json": {
+    "source_id": 1
+   },
+   "expect_status": 409
+  },
+  {
+   "name": "opptatt: 422 vinner over 409",
+   "method": "POST",
+   "path": "/api/jobs/tag",
+   "json": {
+    "limit": "x"
+   }
+  },
+  {
+   "name": "status mens jobben går",
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "fields": [
+    "running",
+    "kind",
+    "step",
+    "message",
+    "source_id"
+   ]
+  },
+  {
+   "wait": true
+  },
+  {
+   "name": "status etter faces-detect",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "progress etter faces-detect",
+   "method": "GET",
+   "path": "/api/progress"
+  },
+  {
+   "name": "klynging",
+   "method": "POST",
+   "path": "/api/jobs/faces-cluster",
+   "json": {
+    "full": false
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "progress etter klynging",
+   "method": "GET",
+   "path": "/api/progress",
+   "fields": [
+    "derive",
+    "ai",
+    "faces",
+    "images_total",
+    "faces_total",
+    "confirm_threshold"
+   ]
+  },
+  {
+   "name": "oppdater kilde b uten nøkkel",
+   "method": "POST",
+   "path": "/api/jobs/update",
+   "json": {
+    "source_id": 2
+   },
+   "wait": true
+  },
+  {
+   "name": "status etter oppdatering",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress",
+   "query": {
+    "source_id": 2
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/cost",
+   "query": {
+    "source_id": 2
+   }
+  },
+  {
+   "name": "faces-detect på nytt med feil",
+   "method": "POST",
+   "path": "/api/jobs/faces-detect",
+   "json": {
+    "retry_errors": true,
+    "source_id": 1
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress",
+   "fields": [
+    "derive",
+    "ai",
+    "faces",
+    "images_total",
+    "faces_total",
+    "confirm_threshold"
+   ]
+  }
+ ]
+}

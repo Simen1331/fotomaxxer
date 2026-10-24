@@ -1,0 +1,233 @@
+{
+ "beskrivelse": "Kilder: legg til (ok, duplikat, finnes ikke, fil, ~, relativ, med profil), list, sett profil, fjern med orphan-opprydding — ny pakke + scanlib",
+ "steps": [
+  {
+   "method": "GET",
+   "path": "/api/sources"
+  },
+  {
+   "name": "legg til a",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/a"
+   },
+   "expect_status": 201
+  },
+  {
+   "name": "duplikat",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/a/"
+   }
+  },
+  {
+   "name": "duplikat via ..",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/b/../a"
+   }
+  },
+  {
+   "name": "finnes ikke",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/finnes-ikke"
+   }
+  },
+  {
+   "name": "fil, ikke mappe",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/a/notat.txt"
+   }
+  },
+  {
+   "name": "symlenke til mappe",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/a/symlenke-til-mappe"
+   }
+  },
+  {
+   "name": "æøå i stien",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/a/Sommer på hytta"
+   }
+  },
+  {
+   "name": "~ i stien",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "~/Bilder"
+   }
+  },
+  {
+   "name": "med ukjent profil (FK)",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{home}/a",
+    "profile_id": 99
+   }
+  },
+  {
+   "name": "profil",
+   "method": "POST",
+   "path": "/api/profiles",
+   "json": {
+    "name": "Design",
+    "focus": "materialer",
+    "categories": [
+     "materiale"
+    ]
+   }
+  },
+  {
+   "name": "med profil",
+   "method": "POST",
+   "path": "/api/sources",
+   "json": {
+    "path": "{lib}/b",
+    "profile_id": 1
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/sources"
+  },
+  {
+   "name": "fjern profil",
+   "method": "PATCH",
+   "path": "/api/sources/5",
+   "json": {
+    "profile_id": null
+   }
+  },
+  {
+   "name": "sett profil",
+   "method": "PATCH",
+   "path": "/api/sources/1",
+   "json": {
+    "profile_id": 1
+   }
+  },
+  {
+   "name": "sett profil uten felt",
+   "method": "PATCH",
+   "path": "/api/sources/1",
+   "json": {}
+  },
+  {
+   "name": "ukjent kilde",
+   "method": "PATCH",
+   "path": "/api/sources/42",
+   "json": {
+    "profile_id": 1
+   }
+  },
+  {
+   "name": "negativ id",
+   "method": "PATCH",
+   "path": "/api/sources/-1",
+   "json": {
+    "profile_id": 1
+   }
+  },
+  {
+   "name": "ukjent profil gir 500 (IntegrityError)",
+   "method": "PATCH",
+   "path": "/api/sources/1",
+   "json": {
+    "profile_id": 77
+   }
+  },
+  {
+   "name": "skann a for å få filer",
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "json": {
+    "source_id": 1
+   },
+   "wait": true
+  },
+  {
+   "name": "jobbstatus",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "skann b",
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "json": {
+    "source_id": 5
+   },
+   "wait": true
+  },
+  {
+   "name": "jobbstatus",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "file_count etter skanning",
+   "method": "GET",
+   "path": "/api/sources"
+  },
+  {
+   "name": "lag thumbnails for b",
+   "method": "POST",
+   "path": "/api/jobs/derive",
+   "json": {
+    "source_id": 5
+   },
+   "wait": true
+  },
+  {
+   "name": "jobbstatus",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "check_files": "{pakke}/derived",
+   "hash": true
+  },
+  {
+   "name": "fjern b (orphans ryddes)",
+   "method": "DELETE",
+   "path": "/api/sources/5",
+   "json": {}
+  },
+  {
+   "check_files": "{pakke}/derived",
+   "hash": true
+  },
+  {
+   "name": "fjern a uten kropp",
+   "method": "DELETE",
+   "path": "/api/sources/1"
+  },
+  {
+   "name": "fjern igjen",
+   "method": "DELETE",
+   "path": "/api/sources/1"
+  },
+  {
+   "method": "GET",
+   "path": "/api/sources"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  }
+ ]
+}

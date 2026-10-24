@@ -1,0 +1,980 @@
+{
+ "beskrivelse": "Eksport på en ny pakke med en KOPI av scanlib (kjør med --library <kopi>; symlenkene i kopien må peke inn i kopien): skann, album og manglende originaler via exec_sql, 400/404/422, album (spesialtegn og æøå i navnet), utvalg (duplikater, ukjente id-er, originalnavn med kollisjon), stinormalisering, relativ sti og ~, ugyldige mål (fil, under fil, uten tilgang, NUL), standard eksport-mappe, 409 under en stor eksport, SameFileError når målet er originalen, og en original som er en mappe. Filene på disk sjekkes med innhold og mtime",
+ "steps": [
+  {
+   "method": "POST",
+   "path": "/api/sources",
+   "name": "kilde a",
+   "json": {
+    "path": "{lib}/a"
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/api/sources",
+   "name": "kilde b",
+   "json": {
+    "path": "{lib}/b"
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "name": "skann alle",
+   "json": {
+    "all": true
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "skanning ferdig"
+  },
+  {
+   "var": "img_dup",
+   "sql": "SELECT image_id FROM files GROUP BY image_id HAVING COUNT(*) > 1 ORDER BY image_id DESC LIMIT 1"
+  },
+  {
+   "exec_sql": "INSERT INTO albums (id, name, created_at) VALUES (1, 'Sommer på hytta 2011', '2026-10-01 10:00:00'), (2, 'Ærlig talt: «Ørret» & Åse!', '2026-10-01 10:00:00'), (3, '..', '2026-10-01 10:00:00'), (4, 'Tomt album', '2026-10-01 10:00:00'), (5, 'a/b\\c 🙂', '2026-10-01 10:00:00'), (6, '  .skjult.  ', '2026-10-01 10:00:00');INSERT INTO album_items (album_id, image_id, position) SELECT 1, id, (id * 7) % 5 FROM images WHERE id <= 12;INSERT INTO album_items (album_id, image_id, position) SELECT 2, id, -id FROM images WHERE id BETWEEN 20 AND 24;INSERT INTO album_items (album_id, image_id, position) VALUES (3, 30, 0), (3, 31, 0), (5, 3, 2), (5, 40, 1), (6, 41, 0), (6, {img_dup}, 1);UPDATE files SET path = path || '.borte' WHERE id = (SELECT MIN(id) FROM files WHERE image_id = 3);UPDATE files SET path = path || '.borte' WHERE id = (SELECT MIN(id) FROM files WHERE image_id = {img_dup});",
+   "name": "album og manglende originaler"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "uten mål og uten standard",
+   "json": {
+    "image_ids": [
+     1
+    ]
+   },
+   "expect_status": 400
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "tom dest_path og uten standard",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "dest_path": ""
+   },
+   "expect_status": 400
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "tom kropp",
+   "json": {},
+   "expect_status": 400
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "tom image_ids",
+   "json": {
+    "image_ids": [],
+    "dest_path": "{work}/x"
+   },
+   "expect_status": 400
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "null overalt",
+   "json": {
+    "album_id": null,
+    "image_ids": null,
+    "dest_path": "{work}/x"
+   },
+   "expect_status": 400
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album finnes ikke",
+   "json": {
+    "album_id": 999,
+    "dest_path": "{work}/x"
+   },
+   "expect_status": 404
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album finnes ikke, uten mål",
+   "json": {
+    "album_id": 999
+   },
+   "expect_status": 404
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "tomt album",
+   "json": {
+    "album_id": 4,
+    "dest_path": "{work}/x"
+   },
+   "expect_status": 400
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "tomt album, uten mål",
+   "json": {
+    "album_id": 4
+   },
+   "expect_status": 400
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "tomt album vinner over image_ids",
+   "json": {
+    "album_id": 4,
+    "image_ids": [
+     1,
+     2
+    ],
+    "dest_path": "{work}/x"
+   },
+   "expect_status": 400
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 album_id tekst",
+   "json": {
+    "album_id": "abc"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 album_id 1.5",
+   "json": {
+    "album_id": 1.5
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 image_ids tekst",
+   "json": {
+    "image_ids": "1"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 image_ids med feil",
+   "json": {
+    "image_ids": [
+     1,
+     "x",
+     null
+    ]
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 keep_original_names kanskje",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "keep_original_names": "kanskje"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 dest_path tall",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "dest_path": 5
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 kropp er liste",
+   "json": [
+    1,
+    2
+   ],
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 ingen kropp",
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 ugyldig JSON",
+   "body": "{\"album_id\": ",
+   "headers": {
+    "Content-Type": "application/json"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "422 tekst uten JSON-type",
+   "body": "{\"album_id\": 1}",
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "ingen jobb startet ennå"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album 1 nummerert",
+   "json": {
+    "album_id": 1,
+    "dest_path": "{work}/ut"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "album 1 ferdig (bilde 3 mangler)"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album 2 med originalnavn og spesialtegn i navnet",
+   "json": {
+    "album_id": 2,
+    "dest_path": "{work}/ut",
+    "keep_original_names": true
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album 3 «..» blir «album»",
+   "json": {
+    "album_id": 3,
+    "dest_path": "{work}/ut"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album 5 med skråstrek og emoji",
+   "json": {
+    "album_id": 5,
+    "dest_path": "{work}/ut",
+    "keep_original_names": false
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "album 5: én kopiert, én hoppet over"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album 6: første fil mangler, duplikatet brukes ikke",
+   "json": {
+    "album_id": 6,
+    "dest_path": "{work}/ut"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album vinner over image_ids",
+   "json": {
+    "album_id": 3,
+    "image_ids": [
+     1,
+     2,
+     3
+    ],
+    "dest_path": "{work}/ut-vinner"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album 1 på nytt (overskriver)",
+   "json": {
+    "album_id": 1,
+    "dest_path": "{work}/ut"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "check_files": "{work}/ut",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "utvalg med duplikat, manglende og ukjente id-er",
+   "json": {
+    "image_ids": [
+     5,
+     3,
+     5,
+     99999,
+     0,
+     -1,
+     1
+    ],
+    "dest_path": "{work}/utvalg"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "utvalg: 3 kopiert, 4 hoppet over"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "utvalg med originalnavn og navnekollisjon",
+   "json": {
+    "image_ids": [
+     5,
+     5,
+     6
+    ],
+    "dest_path": "{work}/utvalg-navn",
+    "keep_original_names": true
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "utvalg med lax-verdier",
+   "json": {
+    "image_ids": [
+     "7",
+     8.0,
+     true
+    ],
+    "dest_path": "{work}/lax",
+    "keep_original_names": "yes"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "bare manglende",
+   "json": {
+    "image_ids": [
+     3,
+     99999
+    ],
+    "dest_path": "{work}/bare-manglende"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "0 kopiert, mappa lages likevel"
+  },
+  {
+   "check_files": "{work}/utvalg",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "check_files": "{work}/utvalg-navn",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "check_files": "{work}/lax",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "check_files": "{work}/bare-manglende",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "mål med // og /./ og / til slutt",
+   "json": {
+    "album_id": 3,
+    "dest_path": "{work}//ut2/./"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "meldingen viser normalisert sti"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "relativ mål-mappe",
+   "json": {
+    "image_ids": [
+     1,
+     2
+    ],
+    "dest_path": "relativ/ut"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "relativ sti i meldingen"
+  },
+  {
+   "check_files": "{cwd}/relativ",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "~ i mål-mappa",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "dest_path": "~/eksport-{impl}"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "check_files": "{home}/eksport-{impl}",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "ukjent ~bruker gir 500",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "dest_path": "~ukjent-bruker-xyz/ut"
+   },
+   "expect_status": 500
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "ingen ny jobb etter 500"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "mål er en fil",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "dest_path": "{home}/fil.txt"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "FileExistsError"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "mål under en fil",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "dest_path": "{home}/fil.txt/under"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "NotADirectoryError"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album under en fil",
+   "json": {
+    "album_id": 1,
+    "dest_path": "{home}/fil.txt"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "NotADirectoryError for undermappa"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "mål uten tilgang",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "dest_path": "{home}/låst/ut"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "PermissionError"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "mål med NUL-tegn",
+   "json": {
+    "image_ids": [
+     1
+    ],
+    "dest_path": "{work}/a\u0000b"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "ValueError for NUL-tegn"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/settings/default_export_dir",
+   "name": "standard satt til tom streng",
+   "json": {
+    "value": ""
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "tom standard gir no_dest",
+   "json": {
+    "image_ids": [
+     1
+    ]
+   },
+   "expect_status": 400
+  },
+  {
+   "method": "PUT",
+   "path": "/api/settings/default_export_dir",
+   "name": "standard eksport-mappe",
+   "json": {
+    "value": "{work}/standard"
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "uten dest_path brukes standarden",
+   "json": {
+    "image_ids": [
+     2
+    ]
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "tom dest_path brukes standarden",
+   "json": {
+    "album_id": 3,
+    "dest_path": ""
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "dest_path null brukes standarden",
+   "json": {
+    "image_ids": [
+     4
+    ],
+    "dest_path": null
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "dest_path vinner over standarden",
+   "json": {
+    "image_ids": [
+     4
+    ],
+    "dest_path": "{work}/eget"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "check_files": "{work}/standard",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "exec_sql": "INSERT INTO albums (id, name, created_at) VALUES (7, 'Alt', '2026-10-01 10:00:00');INSERT INTO album_items (album_id, image_id, position) SELECT 7, id, 0 FROM images;",
+   "name": "album med alle bildene"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "stor eksport",
+   "json": {
+    "album_id": 7,
+    "dest_path": "{work}/alt"
+   },
+   "expect_status": 202
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "ny eksport mens en kjører",
+   "json": {
+    "album_id": 1,
+    "dest_path": "{work}/opptatt"
+   },
+   "expect_status": 409
+  },
+  {
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "name": "skann mens eksporten kjører",
+   "json": {},
+   "expect_status": 409
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "eksporten kjører",
+   "fields": [
+    "running",
+    "kind",
+    "step"
+   ]
+  },
+  {
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "stor eksport ferdig"
+  },
+  {
+   "check_files": "{work}/alt",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "kopi av bilde 6 med originalnavn",
+   "json": {
+    "image_ids": [
+     6
+    ],
+    "dest_path": "{work}/kopi",
+    "keep_original_names": true
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "exec_sql": "UPDATE files SET path = '{work}/kopi/' || replace(path, rtrim(path, replace(path, '/', '')), '') WHERE id = (SELECT MIN(id) FROM files WHERE image_id = 6);",
+   "name": "bilde 6 peker nå på kopien"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "eksport til samme fil",
+   "json": {
+    "image_ids": [
+     6
+    ],
+    "dest_path": "{work}/kopi",
+    "keep_original_names": true
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "SameFileError, originalen urørt"
+  },
+  {
+   "check_files": "{work}/kopi",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "nummerert ved siden av originalen",
+   "json": {
+    "image_ids": [
+     6
+    ],
+    "dest_path": "{work}/kopi"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "jobbstatus"
+  },
+  {
+   "check_files": "{work}/kopi",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "exec_sql": "UPDATE files SET path = '{lib}/a/arkiv' WHERE id = (SELECT MIN(id) FROM files WHERE image_id = 8);",
+   "name": "bilde 8 peker på en mappe"
+  },
+  {
+   "method": "POST",
+   "path": "/api/export",
+   "name": "album 1 med en mappe som original",
+   "json": {
+    "album_id": 1,
+    "dest_path": "{work}/feil"
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "IsADirectoryError etter to kopier"
+  },
+  {
+   "check_files": "{work}/feil",
+   "hash": true,
+   "mtime": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/export",
+   "name": "GET /api/export",
+   "expect_status": 404
+  },
+  {
+   "method": "PUT",
+   "path": "/api/export",
+   "name": "PUT /api/export",
+   "expect_status": 405
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/export",
+   "name": "DELETE /api/export",
+   "expect_status": 405
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/export",
+   "name": "HEAD /api/export",
+   "expect_status": 405
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/update",
+   "name": "GET /api/jobs/update (bare andre metoder)",
+   "expect_status": 404
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/jobs/update",
+   "name": "HEAD /api/jobs/update",
+   "expect_status": 405
+  },
+  {
+   "method": "GET",
+   "path": "/api/sources/1",
+   "name": "GET /api/sources/1 (bare andre metoder)",
+   "expect_status": 404
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/sources/1",
+   "name": "HEAD /api/sources/1",
+   "expect_status": 405
+  },
+  {
+   "method": "GET",
+   "path": "/api/settings/ai_model",
+   "name": "GET /api/settings/ai_model (bare andre metoder)",
+   "expect_status": 404
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/settings/ai_model",
+   "name": "HEAD /api/settings/ai_model",
+   "expect_status": 405
+  },
+  {
+   "method": "GET",
+   "path": "/api/maintenance/prepare-handoff",
+   "name": "GET /api/maintenance/prepare-handoff (bare andre metoder)",
+   "expect_status": 404
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/maintenance/prepare-handoff",
+   "name": "HEAD /api/maintenance/prepare-handoff",
+   "expect_status": 405
+  },
+  {
+   "method": "GET",
+   "path": "/api/profiles/1",
+   "name": "GET /api/profiles/1 (bare andre metoder)",
+   "expect_status": 404
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/profiles/1",
+   "name": "HEAD /api/profiles/1",
+   "expect_status": 405
+  },
+  {
+   "check_files": "{work}",
+   "hash": true,
+   "mtime": true
+  }
+ ]
+}

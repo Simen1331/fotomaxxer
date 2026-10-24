@@ -1,0 +1,8 @@
+[
+  ["faces", "cluster"],
+  ["faces", "cluster", "--full"],
+  ["faces", "cluster"],
+  ["faces", "cluster", "--full", "--threshold", "0.3"],
+  ["faces", "cluster", "--full", "--threshold", "0.95"],
+  ["faces", "cluster"]
+]

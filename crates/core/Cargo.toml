@@ -1,0 +1,29 @@
+[package]
+name = "fotomaxxer-core"
+description = "FotoMaxxer-pipelinen: database, lagring, scan, derive, tagging"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+base64.workspace = true
+dunce.workspace = true
+fotomaxxer-faces = { path = "../faces" }
+image = { workspace = true, features = ["bmp", "gif", "tiff", "webp"] }
+imagesize.workspace = true
+kamadak-exif.workspace = true
+libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
+miniz_oxide = "0.8"
+rayon.workspace = true
+rusqlite.workspace = true
+serde.workspace = true
+# float_roundtrip: flyttall tolkes korrekt avrundet som Pythons json.loads (ai_tags.raw_json).
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+sha2.workspace = true
+thiserror.workspace = true
+ureq.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true
+tempfile.workspace = true

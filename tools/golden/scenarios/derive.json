@@ -1,0 +1,10 @@
+[
+  ["init"],
+  ["source", "add", "{lib}/a"],
+  ["source", "add", "{lib}/b"],
+  ["derive"],
+  ["scan", "--all"],
+  ["derive"],
+  ["derive"],
+  ["derive", "--workers", "2"]
+]

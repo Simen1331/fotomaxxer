@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FotoMaxxer — design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Mørkerom — varm koksgrå, ikke kald blågrå */
+    --bg:        #14110e;
+    --bg-2:      #1a1612;
+    --surface:   #201b16;
+    --surface-2: #271f19;
+    --line:      #322a22;
+    --line-soft: #2a231d;
+    --ink:       #ece4d8;
+    --ink-2:     #b6aa9a;
+    --ink-3:     #837868;
+    --amber:     #e0a96b;
+    --amber-hi:  #f0c489;
+    --amber-deep:#b9823f;
+    --vinter:    #8fb4c9;
+    --var:       #a9c08a;
+    --sommer:    #e0b45e;
+    --host:      #cf8b56;
+    --radius:    13px;
+    --radius-sm: 8px;
+    --shadow:    0 18px 48px -18px rgba(0,0,0,.7);
+    --ease:      cubic-bezier(.22,.61,.36,1);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Hanken Grotesk',sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  /* Atmosfære: varm glød + filmkorn */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(120% 80% at 12% -10%, rgba(224,169,107,.10), transparent 55%),
+      radial-gradient(90% 70% at 100% 110%, rgba(143,180,201,.06), transparent 50%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.04;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .app{position:relative;z-index:2}
+
+  /* ───────── Topbar ───────── */
+  .topbar{
+    position:sticky;top:0;z-index:40;
+    display:flex;align-items:center;gap:28px;
+    padding:0 26px;height:66px;
+    background:linear-gradient(180deg, rgba(20,17,14,.96), rgba(20,17,14,.82));
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;flex-direction:column;line-height:1;flex-shrink:0}
+  .brand b{
+    font-family:'Fraunces',serif;font-weight:600;font-size:23px;letter-spacing:-.01em;
+    font-optical-sizing:auto;
+  }
+  .brand b em{font-style:italic;color:var(--amber);font-weight:500}
+  .brand span{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+
+  .search{
+    position:relative;flex:1;max-width:440px;
+  }
+  .search input{
+    width:100%;height:40px;padding:0 16px 0 42px;
+    background:var(--surface);border:1px solid var(--line);border-radius:99px;
+    color:var(--ink);font-family:inherit;font-size:13.5px;
+    transition:border-color .2s,background .2s;
+  }
+  .search input::placeholder{color:var(--ink-3)}
+  .search input:focus{outline:none;border-color:var(--amber-deep);background:var(--surface-2)}
+  .search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--ink-3)}
+
+  .nav{display:flex;gap:2px;margin-left:auto}
+  .nav button{
+    font-family:inherit;font-size:13.5px;font-weight:500;
+    color:var(--ink-2);background:none;border:none;cursor:pointer;
+    padding:9px 15px;border-radius:99px;position:relative;transition:color .18s;
+  }
+  .nav button:hover{color:var(--ink)}
+  .nav button.on{color:var(--bg);background:var(--amber)}
+
+  /* ───────── Layout ───────── */
+  .view{display:none;animation:fade .5s var(--ease)}
+  .view.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .library{display:grid;grid-template-columns:248px 1fr;align-items:start}
+
+  /* ───────── Sidebar ───────── */
+  .sidebar{
+    position:sticky;top:66px;height:calc(100vh - 66px);overflow-y:auto;
+    padding:24px 20px 40px;border-right:1px solid var(--line);
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+  }
+  .sidebar h2{
+    font-family:'Fraunces',serif;font-weight:500;font-size:15px;
+    color:var(--ink);margin-bottom:4px;
+  }
+  .sidebar .count{font-size:11.5px;color:var(--ink-3);margin-bottom:22px;font-variant-numeric:tabular-nums}
+
+  .fgroup{border-top:1px solid var(--line-soft);padding:16px 0}
+  .fgroup:first-of-type{border-top:none;padding-top:4px}
+  .fgroup>h3{
+    display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+    font-weight:600;margin-bottom:13px;user-select:none;
+  }
+  .fgroup>h3 .chev{transition:transform .2s}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
+    font-family:inherit;font-size:12.5px;color:var(--ink-2);cursor:pointer;
+    padding:5px 11px;border-radius:99px;border:1px solid var(--line);
+    background:var(--surface);transition:all .16s;white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+  .chip:hover{border-color:var(--amber-deep);color:var(--ink)}
+  .chip.on{background:var(--amber);border-color:var(--amber);color:var(--bg);font-weight:600}
+  .chip .n{opacity:.55;margin-left:5px;font-size:11px}
+  .chip.on .n{opacity:.7}
+
+  .season{display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+  .flist{display:flex;flex-direction:column;gap:1px}
+  .frow{
+    display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:7px;cursor:pointer;
+    color:var(--ink-2);transition:background .15s,color .15s;font-size:13px;
+  }
+  .frow:hover{background:var(--surface);color:var(--ink)}
+  .frow.on{background:var(--surface-2);color:var(--ink)}
+  .frow .n{margin-left:auto;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .frow .av{width:22px;height:22px;border-radius:99px;object-fit:cover;flex-shrink:0}
+
+  /* ───────── Grid ───────── */
+  .gridwrap{padding:24px 26px 120px}
+  .gridhead{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+  .gridhead h1{font-family:'Fraunces',serif;font-weight:500;font-size:26px;letter-spacing:-.01em}
+  .gridhead .sub{color:var(--ink-3);font-size:12.5px;font-variant-numeric:tabular-nums}
+  .gridhead .sort{margin-left:auto;display:flex;gap:7px;align-items:center;color:var(--ink-3);font-size:12.5px}
+  .gridhead .sort b{color:var(--ink-2);font-weight:500;cursor:pointer}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:11px;
+  }
+  .cell{
+    position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;
+    cursor:pointer;background:var(--surface);
+    opacity:0;transform:translateY(14px);
+    animation:rise .55s var(--ease) forwards;
+    box-shadow:0 1px 0 rgba(0,0,0,.4);
+  }
+  @keyframes rise{to{opacity:1;transform:none}}
+  .cell img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--ease),filter .3s}
+  .cell::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);border-radius:inherit;pointer-events:none}
+  .cell:hover img{transform:scale(1.05)}
+  .cell .grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,17,14,.4) 0%,transparent 26%,transparent 64%,rgba(20,17,14,.72) 100%);opacity:0;transition:opacity .25s}
+  .cell:hover .grad,.cell.sel .grad{opacity:1}
+  .cell .meta{position:absolute;left:10px;bottom:9px;right:10px;opacity:0;transform:translateY(4px);transition:all .25s;pointer-events:none}
+  .cell:hover .meta{opacity:1;transform:none}
+  .cell .meta .pl{font-size:11.5px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+  .cell .meta .dt{font-size:10.5px;color:rgba(255,255,255,.7);font-family:'Spline Sans Mono',monospace}
+  .pers-badge{position:absolute;top:9px;left:9px;display:flex;align-items:center;gap:4px;
+    background:rgba(20,17,14,.66);backdrop-filter:blur(6px);border-radius:99px;padding:3px 8px 3px 6px;
+    font-size:10.5px;color:#fff;opacity:0;transition:opacity .25s}
+  .cell:hover .pers-badge{opacity:1}
+  .pers-badge svg{opacity:.85}
+
+  .pick{
+    position:absolute;top:9px;right:9px;width:24px;height:24px;border-radius:99px;
+    border:1.5px solid rgba(255,255,255,.7);background:rgba(20,17,14,.5);backdrop-filter:blur(4px);
+    display:grid;place-items:center;opacity:0;transform:scale(.85);transition:all .2s var(--ease);z-index:3;
+  }
+  .cell:hover .pick{opacity:1;transform:none}
+  .pick svg{opacity:0;transform:scale(.5);transition:all .2s var(--ease);color:var(--bg)}
+  .cell.sel .pick{opacity:1;transform:none;background:var(--amber);border-color:var(--amber)}
+  .cell.sel .pick svg{opacity:1;transform:none}
+  .cell.sel{box-shadow:0 0 0 2.5px var(--amber),var(--shadow)}
+  .cell.sel img{filter:saturate(1.05)}
+
+  /* ───────── Seleksjonslinje ───────── */
+  .selbar{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(140%);
+    z-index:50;display:flex;align-items:center;gap:18px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:99px;
+    padding:11px 13px 11px 22px;box-shadow:var(--shadow);
+    transition:transform .42s var(--ease);
+  }
+  .selbar.show{transform:translateX(-50%) translateY(0)}
+  .selbar .lbl{font-size:13.5px;color:var(--ink)}
+  .selbar .lbl b{font-family:'Spline Sans Mono',monospace;color:var(--amber-hi);font-weight:500;font-size:14px}
+  .selbar .sep{width:1px;height:22px;background:var(--line)}
+  .selbar button{
+    font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border-radius:99px;
+    padding:8px 16px;border:none;display:flex;align-items:center;gap:7px;transition:all .16s;
+  }
+  .btn-ghost{background:transparent;color:var(--ink-2)}
+  .btn-ghost:hover{background:var(--surface);color:var(--ink)}
+  .btn-amber{background:var(--amber);color:var(--bg)}
+  .btn-amber:hover{background:var(--amber-hi)}
+  .selbar .x{background:none;border:none;color:var(--ink-3);cursor:pointer;padding:8px;border-radius:99px}
+  .selbar .x:hover{color:var(--ink);background:var(--surface)}
+
+  /* ───────── Lightbox ───────── */
+  .lightbox{
+    position:fixed;inset:0;z-index:80;display:none;
+    background:rgba(10,8,6,.86);backdrop-filter:blur(10px);
+  }
+  .lightbox.show{display:grid;grid-template-columns:1fr 372px;animation:fade .3s var(--ease)}
+  .lb-stage{position:relative;display:grid;place-items:center;padding:46px}
+  .lb-imgwrap{position:relative;max-width:100%;max-height:100%;border-radius:6px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
+  .lb-imgwrap img{display:block;max-width:100%;max-height:calc(100vh - 92px)}
+  .face{position:absolute;border:1.5px solid var(--amber);border-radius:4px;box-shadow:0 0 0 1px rgba(0,0,0,.4);transition:all .2s}
+  .face span{position:absolute;left:-1.5px;top:100%;margin-top:5px;background:var(--amber);color:var(--bg);
+    font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap}
+  .face.unknown{border-color:var(--ink-2);border-style:dashed}
+  .face.unknown span{background:var(--ink-2);color:var(--bg)}
+  .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:99px;
+    background:rgba(32,27,22,.7);border:1px solid var(--line);color:var(--ink);cursor:pointer;
+    display:grid;place-items:center;transition:all .18s}
+  .lb-nav:hover{background:var(--surface-2);border-color:var(--amber-deep)}
+  .lb-nav.prev{left:18px}.lb-nav.next{right:18px}
+  .lb-close{position:absolute;top:18px;left:18px;width:40px;height:40px;border-radius:99px;
+    background:rgba(32,27,22,.7);border:1px solid var(--line);color:var(--ink);cursor:pointer;display:grid;place-items:center;z-index:5}
+  .lb-close:hover{background:var(--surface-2)}
+
+  .lb-panel{
+    background:var(--bg-2);border-left:1px solid var(--line);overflow-y:auto;
+    padding:30px 28px 40px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+  }
+  .lb-panel .date{font-family:'Fraunces',serif;font-size:24px;font-weight:500;letter-spacing:-.01em;margin-bottom:3px}
+  .lb-panel .loc{display:flex;align-items:center;gap:6px;color:var(--amber);font-size:13px;margin-bottom:22px}
+  .lb-desc{color:var(--ink-2);font-size:13.5px;line-height:1.6;padding:16px 0;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  .lb-sec{padding:20px 0;border-bottom:1px solid var(--line-soft)}
+  .lb-sec h4{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:13px}
+  .exif{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-family:'Spline Sans Mono',monospace;font-size:12px}
+  .exif dt{color:var(--ink-3)}
+  .exif dd{color:var(--ink-2);text-align:right}
+  .tagrow{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 11px;transition:all .15s;cursor:pointer}
+  .tag:hover{border-color:var(--amber-deep);color:var(--ink)}
+  .ppl{display:flex;gap:14px;flex-wrap:wrap}
+  .ppl .p{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
+  .ppl .p img{width:52px;height:52px;border-radius:99px;object-fit:cover;border:2px solid var(--line);transition:border-color .18s}
+  .ppl .p:hover img{border-color:var(--amber)}
+  .ppl .p span{font-size:11.5px;color:var(--ink-2)}
+  .ppl .p.unknown img{filter:grayscale(.6) opacity(.8)}
+
+  /* ───────── Personer ───────── */
+  .people{padding:30px 30px 90px;max-width:1180px;margin:0 auto}
+  .people .head{margin-bottom:8px}
+  .people h1{font-family:'Fraunces',serif;font-weight:500;font-size:28px;letter-spacing:-.01em}
+  .people .lead{color:var(--ink-3);font-size:13.5px;margin-bottom:28px;max-width:54ch;line-height:1.55}
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:18px}
+  .pcard{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    transition:transform .25s var(--ease),border-color .2s,box-shadow .25s;
+    opacity:0;transform:translateY(14px);animation:rise .55s var(--ease) forwards;
+  }
+  .pcard:hover{transform:translateY(-3px);border-color:var(--line);box-shadow:var(--shadow)}
+  .pcard .cover{position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface-2)}
+  .pcard .cover img{width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease)}
+  .pcard:hover .cover img{transform:scale(1.04)}
+  .pcard .cover .cnt{position:absolute;top:10px;right:10px;background:rgba(20,17,14,.7);backdrop-filter:blur(6px);
+    border-radius:99px;padding:4px 10px;font-size:11.5px;font-family:'Spline Sans Mono',monospace;color:var(--ink)}
+  .pcard .body{padding:14px 15px 16px}
+  .pcard .name{font-family:'Fraunces',serif;font-size:17.5px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:7px}
+  .pcard .name svg{color:var(--ink-3);opacity:0;transition:opacity .18s}
+  .pcard:hover .name svg{opacity:1}
+  .pcard .sub{font-size:12px;color:var(--ink-3);margin-top:3px}
+  .pcard.unnamed .cover img{filter:grayscale(.5)}
+  .nameField{
+    width:100%;background:var(--bg);border:1px dashed var(--line);border-radius:var(--radius-sm);
+    color:var(--ink);font-family:'Fraunces',serif;font-size:15.5px;padding:9px 12px;
+    transition:border-color .18s,background .18s;
+  }
+  .nameField::placeholder{color:var(--ink-3);font-style:italic}
+  .nameField:focus{outline:none;border-style:solid;border-color:var(--amber);background:var(--surface-2)}
+
+  /* ───────── Generisk side-layout ───────── */
+  .page{max-width:1180px;margin:0 auto;padding:30px 30px 90px}
+  .page h1{font-family:'Fraunces',serif;font-weight:500;font-size:28px;letter-spacing:-.01em}
+  .page .lead{color:var(--ink-3);font-size:13.5px;margin:8px 0 28px;max-width:60ch;line-height:1.55}
+  .backlink{display:inline-flex;align-items:center;gap:7px;color:var(--ink-3);font-size:12.5px;cursor:pointer;margin-bottom:18px}
+  .backlink:hover{color:var(--ink)}
+
+  /* ───────── Kilder & pipeline ───────── */
+  .updatebar{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);padding:18px 20px;margin-bottom:14px}
+  .updatebar .txt{flex:1}
+  .updatebar .txt b{font-family:'Fraunces',serif;font-size:16px;font-weight:500}
+  .updatebar .txt span{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+  .bigbtn{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;border-radius:99px;
+    padding:12px 22px;background:var(--amber);color:var(--bg);display:flex;align-items:center;gap:9px;transition:background .16s}
+  .bigbtn:hover{background:var(--amber-hi)}
+  .bigbtn svg{stroke:var(--bg)}
+  .srcrow{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:8px}
+  .srcrow .ic{width:34px;height:34px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;color:var(--amber);flex-shrink:0}
+  .srcrow .info{flex:1;min-width:0}
+  .srcrow .info b{font-size:13.5px;font-weight:500}
+  .srcrow .info span{display:block;color:var(--ink-3);font-size:11.5px;font-family:'Spline Sans Mono',monospace;margin-top:2px}
+  .srcrow .st{font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .srcrow .mini{background:transparent;border:1px solid var(--line);color:var(--ink-2);font-family:inherit;
+    font-size:12px;border-radius:99px;padding:6px 13px;cursor:pointer;transition:all .15s}
+  .srcrow .mini:hover{border-color:var(--amber-deep);color:var(--ink)}
+  .addsrc{display:flex;align-items:center;gap:9px;color:var(--ink-3);font-size:13px;cursor:pointer;padding:14px 18px;
+    border:1px dashed var(--line);border-radius:var(--radius-sm);margin-bottom:24px;transition:all .15s}
+  .addsrc:hover{border-color:var(--amber-deep);color:var(--ink)}
+  .adv{border:1px solid var(--line-soft);border-radius:var(--radius-sm);overflow:hidden;margin-top:18px}
+  .adv summary{padding:13px 18px;cursor:pointer;color:var(--ink-2);font-size:13px;font-weight:500;list-style:none;
+    display:flex;align-items:center;gap:8px;user-select:none}
+  .adv summary::-webkit-details-marker{display:none}
+  .adv summary .chev{transition:transform .2s;color:var(--ink-3)}
+  .adv[open] summary .chev{transform:rotate(90deg)}
+  .adv .body{padding:6px 18px 18px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--line-soft)}
+  .stepbtn{font-family:inherit;font-size:12.5px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);
+    border-radius:99px;padding:8px 15px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px}
+  .stepbtn:hover{border-color:var(--amber-deep);color:var(--ink)}
+  .stepbtn .mono{font-family:'Spline Sans Mono',monospace;opacity:.55;font-size:11px}
+
+  /* ───────── Innstillinger ───────── */
+  .setgroup{border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:16px;background:var(--surface)}
+  .setgroup h3{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:18px}
+  .field{margin-bottom:18px}
+  .field:last-child{margin-bottom:0}
+  .field label{display:block;font-size:13px;color:var(--ink);margin-bottom:7px}
+  .field .desc{font-size:11.5px;color:var(--ink-3);margin-top:6px}
+  .inp{width:100%;height:40px;padding:0 14px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);
+    color:var(--ink);font-family:inherit;font-size:13.5px;transition:border-color .18s}
+  .inp:focus{outline:none;border-color:var(--amber-deep)}
+  .inp.mono{font-family:'Spline Sans Mono',monospace;font-size:13px}
+  .inprow{display:flex;gap:9px}
+  .inprow .inp{flex:1}
+  .pastebtn{background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);font-family:inherit;font-size:13px;
+    border-radius:var(--radius-sm);padding:0 16px;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .pastebtn:hover{border-color:var(--amber-deep);color:var(--ink)}
+  .slider{display:flex;align-items:center;gap:14px}
+  .slider input[type=range]{flex:1;accent-color:var(--amber)}
+  .slider .val{font-family:'Spline Sans Mono',monospace;font-size:13px;color:var(--amber-hi);width:34px;text-align:right}
+  select.inp{appearance:none;cursor:pointer}
+  .danger{border-color:#5a3a30}
+  .danger h3{color:var(--host)}
+  .dangerbtn{background:transparent;border:1px solid #6b4233;color:var(--host);font-family:inherit;font-size:13px;font-weight:500;
+    border-radius:99px;padding:9px 18px;cursor:pointer;transition:all .15s}
+  .dangerbtn:hover{background:rgba(207,139,86,.1)}
+  .pkginfo{font-family:'Spline Sans Mono',monospace;font-size:12px;color:var(--ink-3);line-height:1.7}
+
+  /* ───────── Person-detalj (ansikts-rutenett) ───────── */
+  .pd-head{display:flex;align-items:center;gap:18px;margin-bottom:6px}
+  .pd-head .cov{width:64px;height:64px;border-radius:99px;object-fit:cover;border:2px solid var(--line)}
+  .pd-head .nameField{max-width:280px}
+  .facegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:11px;margin-top:24px}
+  .facecell{position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;cursor:pointer;background:var(--surface);
+    opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards}
+  .facecell img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+  .facecell:hover img{transform:scale(1.06)}
+  .facecell .pick{top:7px;right:7px;width:21px;height:21px}
+  .facecell.sel{box-shadow:0 0 0 2.5px var(--amber)}
+  .facecell.sel .pick{opacity:1;transform:none;background:var(--amber);border-color:var(--amber)}
+  .facecell.sel .pick svg{opacity:1;transform:none}
+  .facetoolbar{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(140%);z-index:50;
+    display:flex;align-items:center;gap:14px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;
+    padding:11px 14px 11px 22px;box-shadow:var(--shadow);transition:transform .42s var(--ease)}
+  .facetoolbar.show{transform:translateX(-50%) translateY(0)}
+  .facetoolbar .lbl b{font-family:'Spline Sans Mono',monospace;color:var(--amber-hi)}
+
+  /* ───────── Aktivt album-skuff ───────── */
+  .libcol{display:flex;flex-direction:column}
+  .traywrap{position:fixed;right:0;top:66px;bottom:0;width:300px;background:var(--bg-2);border-left:1px solid var(--line);
+    z-index:30;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .35s var(--ease)}
+  .traywrap.show{transform:none}
+  .tray-h{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+  .tray-h .k{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);font-weight:600}
+  .tray-h .nm{font-family:'Fraunces',serif;font-size:19px;font-weight:500;margin-top:4px;display:flex;align-items:center;justify-content:space-between}
+  .tray-h .sub{font-size:11.5px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
+  .tray-list{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+  .tray-item{display:flex;align-items:center;gap:10px;padding:6px;border-radius:8px;transition:background .15s}
+  .tray-item:hover{background:var(--surface)}
+  .tray-item img{width:46px;height:46px;border-radius:6px;object-fit:cover;flex-shrink:0}
+  .tray-item .pos{font-family:'Spline Sans Mono',monospace;font-size:11px;color:var(--ink-3);width:22px}
+  .tray-item .nm2{font-size:12px;color:var(--ink-2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tray-item .drag{color:var(--ink-3);cursor:grab}
+  .tray-f{padding:14px;border-top:1px solid var(--line);display:flex;gap:9px}
+  .tray-f button{flex:1}
+  .albumpick{display:flex;align-items:center;gap:8px}
+  .albumpick select{height:34px}
+
+  /* album-kort */
+  .albumcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;cursor:pointer;
+    transition:transform .25s var(--ease),box-shadow .25s;opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards}
+  .albumcard:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .albumcard .quad{display:grid;grid-template-columns:1fr 1fr;aspect-ratio:1.3;gap:1px;background:var(--line)}
+  .albumcard .quad img{width:100%;height:100%;object-fit:cover}
+  .albumcard .body{padding:13px 15px 15px}
+  .albumcard .nm{font-family:'Fraunces',serif;font-size:17px;font-weight:500}
+  .albumcard .sub{font-size:11.5px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
+
+  /* lightbox face-popover */
+  .face{cursor:pointer}
+  .facepop{position:absolute;z-index:10;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+    box-shadow:var(--shadow);padding:7px;display:none;flex-direction:column;gap:2px;min-width:160px}
+  .facepop.show{display:flex}
+  .facepop .cur{font-size:11px;color:var(--ink-3);padding:5px 9px}
+  .facepop button{text-align:left;background:none;border:none;color:var(--ink-2);font-family:inherit;font-size:13px;
+    padding:8px 9px;border-radius:6px;cursor:pointer;transition:background .12s}
+  .facepop button:hover{background:var(--surface);color:var(--ink)}
+
+  /* "vis ekskluderte"-bryter i grid-head */
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-3);cursor:pointer}
+  .toggle .sw{width:34px;height:19px;border-radius:99px;background:var(--line);position:relative;transition:background .2s}
+  .toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:99px;background:var(--ink-3);transition:all .2s}
+  .toggle.on .sw{background:var(--amber)}
+  .toggle.on .sw::after{left:17px;background:var(--bg)}
+
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:hover{background:var(--line-soft)}
+
+  .hint{position:fixed;right:16px;bottom:14px;z-index:60;font-size:11px;color:var(--ink-3);
+    font-family:'Spline Sans Mono',monospace;background:var(--surface);border:1px solid var(--line);
+    padding:6px 11px;border-radius:99px;opacity:.8}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <b>Foto<em>Maxxer</em></b>
+      <span>Familiearkivet</span>
+    </div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" placeholder="Søk i beskrivelser, steder og stikkord…">
+    </div>
+    <nav class="nav">
+      <button class="on" data-view="library">Bibliotek</button>
+      <button data-view="people">Personer</button>
+      <button data-view="albums">Album</button>
+      <button data-view="sources">Kilder</button>
+      <button data-view="settings">Innstillinger</button>
+    </nav>
+  </header>
+
+  <!-- ───── BIBLIOTEK ───── -->
+  <section class="view on" id="library">
+    <div class="library">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <h2>Filtrér</h2>
+        <div class="count">3 248 bilder · 12 år</div>
+
+        <div class="fgroup">
+          <h3>Tidsrom <span class="chev">▾</span></h3>
+          <div class="chips">
+            <span class="chip">2024<span class="n">214</span></span>
+            <span class="chip on">2021<span class="n">486</span></span>
+            <span class="chip">2019<span class="n">372</span></span>
+            <span class="chip">2017<span class="n">301</span></span>
+            <span class="chip">2014<span class="n">198</span></span>
+          </div>
+        </div>
+
+        <div class="fgroup">
+          <h3>Sesong <span class="chev">▾</span></h3>
+          <div class="flist">
+            <div class="frow"><span class="dot" style="background:var(--vinter)"></span>Vinter<span class="n">612</span></div>
+            <div class="frow"><span class="dot" style="background:var(--var)"></span>Vår<span class="n">588</span></div>
+            <div class="frow"><span class="dot" style="background:var(--sommer)"></span>Sommer<span class="n">1 204</span></div>
+            <div class="frow on"><span class="dot" style="background:var(--host)"></span>Høst<span class="n">844</span></div>
+          </div>
+        </div>
+
+        <div class="fgroup">
+          <h3>Sted <span class="chev">▾</span></h3>
+          <div class="flist">
+            <div class="frow on">Lannavaara<span class="n">486</span></div>
+            <div class="frow">Tromsø<span class="n">312</span></div>
+            <div class="frow">Lofoten<span class="n">241</span></div>
+            <div class="frow">Hjemme<span class="n">907</span></div>
+            <div class="frow">Kiruna<span class="n">128</span></div>
+          </div>
+        </div>
+
+        <div class="fgroup">
+          <h3>Hendelse <span class="chev">▾</span></h3>
+          <div class="chips">
+            <span class="chip">tur<span class="n">441</span></span>
+            <span class="chip">jul<span class="n">203</span></span>
+            <span class="chip">bursdag<span class="n">156</span></span>
+            <span class="chip">hverdag<span class="n">988</span></span>
+            <span class="chip">ferie<span class="n">372</span></span>
+          </div>
+        </div>
+
+        <div class="fgroup">
+          <h3>Personer <span class="chev">▾</span></h3>
+          <div class="flist">
+            <div class="frow"><img class="av" src="https://i.pravatar.cc/80?img=14" alt="">Mormor<span class="n">142</span></div>
+            <div class="frow"><img class="av" src="https://i.pravatar.cc/80?img=33" alt="">Ola<span class="n">98</span></div>
+            <div class="frow"><img class="av" src="https://i.pravatar.cc/80?img=5" alt="">Ingrid<span class="n">76</span></div>
+          </div>
+        </div>
+
+        <div class="fgroup">
+          <h3>Stikkord <span class="chev">▾</span></h3>
+          <div class="chips">
+            <span class="chip">snø</span><span class="chip">kirke</span><span class="chip">fjell</span>
+            <span class="chip">båt</span><span class="chip">middag</span><span class="chip">hund</span>
+            <span class="chip">strand</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Grid -->
+      <div class="gridwrap">
+        <div class="gridhead">
+          <h1>Lannavaara, høst</h1>
+          <span class="sub">2021 · 486 bilder</span>
+          <span class="sort">
+            <span class="toggle" id="exToggle" style="margin-right:18px"><span class="sw"></span>Vis ekskluderte</span>
+            Sortér: <b>nyeste først ▾</b>
+          </span>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── ALBUM ───── -->
+  <section class="view" id="albums">
+    <div class="page">
+      <h1>Album</h1>
+      <p class="lead">Album er vedvarende prosjekter — bygg flere parallelt over tid. Rekkefølgen du drar bildene i bevares helt ut i eksporten.</p>
+      <div class="pgrid" id="albumgrid"></div>
+    </div>
+  </section>
+
+  <!-- ───── KILDER & PIPELINE ───── -->
+  <section class="view" id="sources">
+    <div class="page">
+      <h1>Kilder &amp; pipeline</h1>
+      <p class="lead">Legg til mappene du vil ha med. «Oppdater biblioteket» finner nye bilder, lager arbeidskopier, AI-merker og grupperer ansikter — i ett.</p>
+
+      <div class="updatebar">
+        <div class="txt"><b>Oppdater biblioteket</b><span>Kjører scan → arbeidskopier → AI-merking → ansikter på alle nye bilder</span></div>
+        <button class="bigbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>Oppdater alt</button>
+      </div>
+
+      <div id="srclist"></div>
+      <div class="addsrc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Legg til mappe…</div>
+
+      <details class="adv">
+        <summary><span class="chev">▸</span>Avansert — kjør enkelt-steg</summary>
+        <div class="body">
+          <button class="stepbtn">Scan <span class="mono">finn nye</span></button>
+          <button class="stepbtn">Arbeidskopier <span class="mono">derive</span></button>
+          <button class="stepbtn">AI-merking <span class="mono">tag</span></button>
+          <button class="stepbtn">Ansikts-deteksjon <span class="mono">detect</span></button>
+          <button class="stepbtn">Klyng ansikter <span class="mono">cluster</span></button>
+          <button class="stepbtn">Full re-klynging <span class="mono">cluster --full</span></button>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ───── INNSTILLINGER ───── -->
+  <section class="view" id="settings">
+    <div class="page" style="max-width:720px">
+      <h1>Innstillinger</h1>
+      <p class="lead">Legges inn én gang. Nøkkelen lagres lokalt i pakka, ikke i en miljøfil — så hele mappa kan flyttes eller deles.</p>
+
+      <div class="setgroup">
+        <h3>AI-merking</h3>
+        <div class="field">
+          <label>OpenRouter API-nøkkel</label>
+          <div class="inprow">
+            <input class="inp mono" type="text" value="sk-o••••••••••••••••3f58" readonly>
+            <button class="pastebtn">Lim inn</button>
+          </div>
+          <div class="desc">Brukes til vision-merking. Får du en ny? Lim inn over. Vises maskert.</div>
+        </div>
+        <div class="field">
+          <label>Modell</label>
+          <select class="inp"><option>google/gemini-2.5-flash</option><option>google/gemini-2.5-pro</option><option>anthropic/claude-haiku-4.5</option></select>
+          <div class="desc">Billig og sterk på vision er standard. Bytt fritt — det logges per bilde.</div>
+        </div>
+      </div>
+
+      <div class="setgroup">
+        <h3>Personer &amp; ansikter</h3>
+        <div class="field">
+          <label>Hvor strengt skal ansikter grupperes til samme person?</label>
+          <div class="slider"><span style="font-size:11.5px;color:var(--ink-3)">løsere</span><input type="range" min="30" max="70" value="50"><span style="font-size:11.5px;color:var(--ink-3)">strengere</span><span class="val">0.50</span></div>
+          <div class="desc">Strengere = færre feil, men samme person kan bli delt i flere grupper du må slå sammen.</div>
+        </div>
+        <div class="field">
+          <label>Hvor mange ansikter før en ny person foreslås?</label>
+          <div class="slider"><input type="range" min="2" max="8" value="3"><span class="val">3</span></div>
+          <div class="desc">Hindrer at ett tilfeldig ansikt blir en egen person.</div>
+        </div>
+      </div>
+
+      <div class="setgroup">
+        <h3>Eksport</h3>
+        <div class="field">
+          <label>Standard eksport-mappe</label>
+          <div class="inprow"><input class="inp mono" type="text" value="~/Bilder/Album"><button class="pastebtn">Velg…</button></div>
+          <div class="desc">Hit eksporteres album. Filer nummereres etter rekkefølge: 001_…, 002_…</div>
+        </div>
+      </div>
+
+      <div class="setgroup danger">
+        <h3>Deling</h3>
+        <div class="field">
+          <label>Klargjør for deling</label>
+          <div class="desc" style="margin:0 0 13px">Tømmer alle kilder + nøkkel/innstillinger så pakka kan gis videre ren. Bildene dine på disk røres ikke.</div>
+          <button class="dangerbtn">Klargjør for deling…</button>
+        </div>
+      </div>
+
+      <div class="setgroup">
+        <h3>Datamappe</h3>
+        <div class="field">
+          <label>Hvor databasen og arbeidskopiene lagres</label>
+          <div class="inprow"><input class="inp mono" type="text" value="~/dev/fotomaxxer"><button class="pastebtn">Flytt…</button></div>
+          <div class="desc">Inneholder <span style="font-family:'Spline Sans Mono',monospace">fotomaxxer.db</span> + <span style="font-family:'Spline Sans Mono',monospace">derived/</span> (3 248 arbeidskopier). Å flytte tar med seg alt — originalbildene dine røres ikke.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── PERSON-DETALJ ───── -->
+  <section class="view" id="persondetail">
+    <div class="page">
+      <div class="backlink" id="pdback"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Alle personer</div>
+      <div class="pd-head">
+        <img class="cov" src="https://i.pravatar.cc/160?img=14" alt="">
+        <div>
+          <input class="nameField" value="Mormor" style="font-size:22px">
+          <div class="lead" style="margin:8px 0 0">142 ansikter i denne gruppen. Velg ansikter som ikke hører hjemme → flytt til en annen person, lag ny, eller ignorer.</div>
+        </div>
+      </div>
+      <div class="facegrid" id="facegrid"></div>
+    </div>
+  </section>
+
+  <!-- ───── PERSONER ───── -->
+  <section class="view" id="people">
+    <div class="people">
+      <div class="head"><h1>Personer</h1></div>
+      <p class="lead">FotoMaxxer har gruppert ansikter den tror er samme person. Gi dem navn én gang, så følger navnet med på alle bilder — også nye du legger til senere. Er en gruppe feil? Slå sammen, del opp eller flytt et ansikt.</p>
+      <div class="pgrid" id="pgrid"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- SELEKSJONSLINJE -->
+<div class="selbar" id="selbar">
+  <span class="lbl"><b id="selcount">0</b> bilder valgt</span>
+  <div class="sep"></div>
+  <button class="btn-ghost">＋ Nytt album</button>
+  <button class="btn-amber">Legg i album ▾</button>
+  <button class="x" id="selclear">✕</button>
+</div>
+
+<!-- AKTIVT ALBUM-SKUFF -->
+<div class="traywrap show" id="tray">
+  <div class="tray-h">
+    <div class="k">Aktivt album</div>
+    <div class="nm">Lofoten-turen <span style="cursor:pointer;color:var(--ink-3)">▾</span></div>
+    <div class="sub">14 bilder · under arbeid</div>
+  </div>
+  <div class="tray-list" id="traylist"></div>
+  <div class="tray-f">
+    <button class="btn-ghost" style="border:1px solid var(--line)">＋ Nytt album</button>
+    <button class="btn-amber">Eksporter</button>
+  </div>
+</div>
+
+<!-- ANSIKTS-VERKTØYLINJE (person-detalj) -->
+<div class="facetoolbar" id="facetoolbar">
+  <span class="lbl"><b id="facecount">0</b> ansikter valgt</span>
+  <div class="sep"></div>
+  <button class="btn-ghost">Flytt til… ▾</button>
+  <button class="btn-ghost">Ny person</button>
+  <button class="btn-amber">Ignorer</button>
+  <button class="x" id="faceclear">✕</button>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <div class="lb-stage">
+    <button class="lb-close" id="lbclose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <button class="lb-nav prev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+    <div class="lb-imgwrap">
+      <img src="https://picsum.photos/seed/lanna7/1100/760" alt="">
+      <div class="face" data-name="Mormor" style="left:32%;top:46%;width:13%;height:19%"><span>Mormor</span></div>
+      <div class="face" data-name="Ingrid" style="left:54%;top:40%;width:12%;height:18%"><span>Ingrid</span></div>
+      <div class="face unknown" data-name="Ukjent" style="left:71%;top:51%;width:10%;height:15%"><span>Ukjent</span></div>
+      <div class="facepop" id="facepop">
+        <div class="cur" id="facepopcur">Merket: Mormor</div>
+        <button>Endre person…</button>
+        <button>Ignorer dette ansiktet</button>
+      </div>
+    </div>
+    <button class="lb-nav next"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+  </div>
+  <aside class="lb-panel">
+    <div class="date">14. oktober 2021</div>
+    <div class="loc">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+      Lannavaara, Norrbotten
+    </div>
+    <p class="lb-desc">To personer går ned midtgangen i en gammel trekirke med store orgelpiper i bakgrunnen. Varmt ettermiddagslys faller inn fra sidevinduene.</p>
+
+    <div class="lb-sec">
+      <h4>Personer i bildet</h4>
+      <div class="ppl">
+        <div class="p"><img src="https://i.pravatar.cc/120?img=14" alt=""><span>Mormor</span></div>
+        <div class="p"><img src="https://i.pravatar.cc/120?img=5" alt=""><span>Ingrid</span></div>
+        <div class="p unknown"><img src="https://i.pravatar.cc/120?img=60" alt=""><span>Ukjent</span></div>
+      </div>
+    </div>
+
+    <div class="lb-sec">
+      <h4>Stikkord</h4>
+      <div class="tagrow">
+        <span class="tag">kirke</span><span class="tag">interiør</span><span class="tag">orgel</span>
+        <span class="tag">midtgang</span><span class="tag">religiøst</span>
+      </div>
+    </div>
+
+    <div class="lb-sec">
+      <h4>Detaljer</h4>
+      <dl class="exif">
+        <dt>tatt</dt><dd>2021-10-14 15:42</dd>
+        <dt>kamera</dt><dd>Canon EOS 6D</dd>
+        <dt>oppløsning</dt><dd>2736 × 1824</dd>
+        <dt>sted</dt><dd>67.49, 21.61</dd>
+        <dt>scene</dt><dd>kirke</dd>
+        <dt>hendelse</dt><dd>tur</dd>
+      </dl>
+    </div>
+  </aside>
+</div>
+
+<div class="hint">klikk et bilde → lightbox · hover → velg</div>
+
+<script>
+  // ─── Bibliotek-grid ───
+  const seeds=['lanna1','lanna2','lanna3','lanna4','lanna5','lanna6','lanna7','lanna8','lanna9','lanna10','lanna11','lanna12','lanna13','lanna14','lanna15','lanna16','lanna17','lanna18'];
+  const places=['Lannavaara','Lannavaara','Kiruna','Lannavaara','Tromsø','Lannavaara'];
+  const grid=document.getElementById('grid');
+  seeds.forEach((s,i)=>{
+    const c=document.createElement('div');
+    c.className='cell';
+    c.style.animationDelay=(i*38)+'ms';
+    const hasP=i%3===0;
+    c.innerHTML=`
+      <img loading="lazy" src="https://picsum.photos/seed/${s}/360/360" alt="">
+      <div class="grad"></div>
+      ${hasP?`<div class="pers-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>${(i%6)+1}</div>`:''}
+      <div class="pick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div class="meta"><div class="pl">${places[i%places.length]}</div><div class="dt">2021-10-${String(14-(i%9)).padStart(2,'0')}</div></div>`;
+    // pick toggles selection, image opens lightbox
+    c.querySelector('.pick').addEventListener('click',e=>{e.stopPropagation();c.classList.toggle('sel');updateSel();});
+    c.addEventListener('click',()=>openLB());
+    grid.appendChild(c);
+  });
+
+  // ─── Seleksjon ───
+  const selbar=document.getElementById('selbar'),selcount=document.getElementById('selcount');
+  function updateSel(){
+    const n=document.querySelectorAll('.cell.sel').length;
+    selcount.textContent=n;
+    selbar.classList.toggle('show',n>0);
+  }
+  document.getElementById('selclear').addEventListener('click',()=>{
+    document.querySelectorAll('.cell.sel').forEach(c=>c.classList.remove('sel'));updateSel();
+  });
+
+  // ─── Lightbox ───
+  const lb=document.getElementById('lightbox');
+  function openLB(){lb.classList.add('show')}
+  document.getElementById('lbclose').addEventListener('click',()=>lb.classList.remove('show'));
+  lb.addEventListener('click',e=>{if(e.target===lb)lb.classList.remove('show')});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('show')});
+
+  // ─── Personer ───
+  const people=[
+    {n:'Mormor',img:14,c:142},{n:'Ola',img:33,c:98},{n:'Ingrid',img:5,c:76},
+    {n:'Lars',img:12,c:54},{n:null,img:60,c:31},{n:'Astrid',img:9,c:28},
+    {n:null,img:51,c:19},{n:null,img:25,c:12}
+  ];
+  const pgrid=document.getElementById('pgrid');
+  people.forEach((p,i)=>{
+    const card=document.createElement('div');
+    card.className='pcard'+(p.n?'':' unnamed');
+    card.style.animationDelay=(i*45)+'ms';
+    card.innerHTML=`
+      <div class="cover">
+        <img src="https://i.pravatar.cc/360?img=${p.img}" alt="">
+        <span class="cnt">${p.c}</span>
+      </div>
+      <div class="body">
+        ${p.n
+          ? `<div class="name">${p.n}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
+             <div class="sub">${p.c} bilder</div>`
+          : `<input class="nameField" placeholder="Navngi person…">
+             <div class="sub" style="margin-top:7px">${p.c} ansikter · ikke navngitt</div>`}
+      </div>`;
+    pgrid.appendChild(card);
+  });
+
+  // ─── Vy-bytte ───
+  const tray=document.getElementById('tray');
+  function showView(id){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view===id));
+    tray.classList.toggle('show',id==='library');   // album-skuff kun på Bibliotek
+    window.scrollTo({top:0});
+  }
+  document.querySelectorAll('.nav button[data-view]').forEach(b=>{
+    b.addEventListener('click',()=>showView(b.dataset.view));
+  });
+
+  // ─── Vis ekskluderte (demo: noen celler markeres skjult) ───
+  document.querySelectorAll('#grid .cell').forEach((c,i)=>{ if(i%7===5){c.dataset.excluded='1';c.style.display='none';c.style.opacity=.5;} });
+  const exT=document.getElementById('exToggle');
+  exT.addEventListener('click',()=>{
+    exT.classList.toggle('on');
+    const on=exT.classList.contains('on');
+    document.querySelectorAll('#grid .cell[data-excluded]').forEach(c=>{c.style.display=on?'':'none';c.style.filter=on?'grayscale(.6)':'';});
+  });
+
+  // ─── Album-kort ───
+  const albums=[
+    {n:'Lofoten-turen',c:14,s:['lanna5','lanna11','lanna2','lanna9']},
+    {n:'Jul hos mormor 2021',c:38,s:['lanna7','lanna3','lanna14','lanna6']},
+    {n:'Beste fra 2019',c:52,s:['lanna1','lanna8','lanna12','lanna16']},
+    {n:'Sommer i båt',c:21,s:['lanna4','lanna13','lanna10','lanna17']},
+  ];
+  const ag=document.getElementById('albumgrid');
+  albums.forEach((a,i)=>{
+    const el=document.createElement('div');el.className='albumcard';el.style.animationDelay=(i*50)+'ms';
+    el.innerHTML=`<div class="quad">${a.s.map(s=>`<img src="https://picsum.photos/seed/${s}/240/240">`).join('')}</div>
+      <div class="body"><div class="nm">${a.n}</div><div class="sub">${a.c} bilder</div></div>`;
+    ag.appendChild(el);
+  });
+
+  // ─── Kilde-rader ───
+  const sources=[
+    {p:'/mnt/disk/Bilder',n:'/mnt/disk/Bilder',c:2840,s:'scannet i går'},
+    {p:'~/Dropbox/Camera Uploads',n:'~/Dropbox/Camera Uploads',c:408,s:'scannet 14. okt'},
+    {p:'/mnt/disk/Skanninger',n:'/mnt/disk/Skanninger',c:0,s:'aldri scannet'},
+  ];
+  const sl=document.getElementById('srclist');
+  sources.forEach(s=>{
+    const r=document.createElement('div');r.className='srcrow';
+    r.innerHTML=`
+      <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></div>
+      <div class="info"><b>${s.n.split('/').pop()||s.n}</b><span>${s.p}</span></div>
+      <span class="st">${s.c?s.c.toLocaleString('no')+' bilder · '+s.s:'<span style="color:var(--host)">'+s.s+'</span>'}</span>
+      <button class="mini">Oppdater</button>
+      <button class="mini">Fjern</button>`;
+    sl.appendChild(r);
+  });
+
+  // ─── Aktivt album-skuff (innhold) ───
+  const tl=document.getElementById('traylist');
+  ['lanna5','lanna11','lanna2','lanna9','lanna4','lanna13'].forEach((s,i)=>{
+    const it=document.createElement('div');it.className='tray-item';
+    it.innerHTML=`<span class="pos">${String(i+1).padStart(2,'0')}</span><img src="https://picsum.photos/seed/${s}/90/90"><span class="nm2">IMG_${8345+i}.JPG</span><span class="drag">⋮⋮</span>`;
+    tl.appendChild(it);
+  });
+
+  // ─── Person-detalj: ansikts-rutenett ───
+  const fg=document.getElementById('facegrid');
+  // hovedsakelig Mormor (img=14), pluss et par "inntrengere" som skal kunne flyttes ut
+  const faceImgs=[14,14,14,14,14,14,14,14,14,14,5,14,14,33,14,14,14,60,14,14];
+  faceImgs.forEach((img,i)=>{
+    const c=document.createElement('div');c.className='facecell';c.style.animationDelay=(i*30)+'ms';
+    c.innerHTML=`<img src="https://i.pravatar.cc/180?img=${img}&u=${i}"><div class="pick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>`;
+    c.querySelector('.pick').addEventListener('click',e=>{e.stopPropagation();c.classList.toggle('sel');updateFaceSel();});
+    c.addEventListener('click',()=>{c.classList.toggle('sel');updateFaceSel();});
+    fg.appendChild(c);
+  });
+  const ftb=document.getElementById('facetoolbar'),fc=document.getElementById('facecount');
+  function updateFaceSel(){const n=document.querySelectorAll('.facecell.sel').length;fc.textContent=n;ftb.classList.toggle('show',n>0);}
+  document.getElementById('faceclear').addEventListener('click',()=>{document.querySelectorAll('.facecell.sel').forEach(c=>c.classList.remove('sel'));updateFaceSel();});
+
+  // person-kort → person-detalj; tilbake
+  document.querySelectorAll('#pgrid .pcard').forEach(card=>{
+    card.addEventListener('click',e=>{ if(e.target.closest('.nameField'))return; showView('persondetail'); });
+  });
+  document.getElementById('pdback').addEventListener('click',()=>showView('people'));
+
+  // ─── Lightbox: klikkbare ansikts-bokser → popover ───
+  const fpop=document.getElementById('facepop');
+  document.querySelectorAll('#lightbox .face').forEach(f=>{
+    f.addEventListener('click',e=>{
+      e.stopPropagation();
+      document.getElementById('facepopcur').textContent='Merket: '+f.dataset.name;
+      fpop.style.left=f.style.left;fpop.style.top=`calc(${f.style.top} + ${f.style.height})`;
+      fpop.classList.add('show');
+    });
+  });
+  document.querySelector('#lightbox .lb-imgwrap').addEventListener('click',e=>{ if(!e.target.closest('.face')&&!e.target.closest('.facepop'))fpop.classList.remove('show'); });
+</script>
+</body>
+</html>

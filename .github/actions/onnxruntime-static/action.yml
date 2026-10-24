@@ -1,0 +1,44 @@
+name: ONNX Runtime (statisk, /MT, bare CPU)
+description: >
+  Henter onnxruntime.lib bygd med statisk C-runtime og uten DirectML fra cachen, eller
+  bygger den med packaging/windows/build-onnxruntime.ps1 (~1 time første gang), og setter
+  ORT_LIB_PATH så ort-sys lenker mot den i stedet for pykes prebygde /MD-bibliotek.
+  Bare for Windows-jobber.
+
+inputs:
+  version:
+    description: ONNX Runtime-versjon (må passe med api-versjonen ort-craten bruker)
+    default: '1.31.0'
+
+runs:
+  using: composite
+  steps:
+    - name: Cache for ONNX Runtime
+      id: cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}\ort-static
+        key: onnxruntime-${{ inputs.version }}-x64-mt-cpu-${{ hashFiles('packaging/windows/build-onnxruntime.ps1') }}
+
+    - name: Bygg ONNX Runtime (cache-bom)
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: >
+        & "${{ github.workspace }}\packaging\windows\build-onnxruntime.ps1"
+        -Version "${{ inputs.version }}"
+        -OutDir "${{ runner.temp }}\ort-static"
+        -WorkDir "${{ runner.temp }}\ort-build"
+
+    # Lagres med en gang (ikke i post-steget), så et senere feilende steg ikke kaster bygget.
+    - name: Lagre ONNX Runtime i cachen
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.temp }}\ort-static
+        key: ${{ steps.cache.outputs.cache-primary-key }}
+
+    - name: Sett ORT_LIB_PATH
+      shell: pwsh
+      run: |
+        "ORT_LIB_PATH=${{ runner.temp }}\ort-static\lib" | Out-File -FilePath $env:GITHUB_ENV -Append
+        Get-ChildItem "${{ runner.temp }}\ort-static\lib"

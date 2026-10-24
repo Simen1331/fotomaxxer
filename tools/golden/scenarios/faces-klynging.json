@@ -1,0 +1,14 @@
+[
+  ["faces", "cluster"],
+  ["faces", "cluster"],
+  ["faces", "cluster", "--full"],
+  ["faces", "cluster", "--threshold", "0.3"],
+  ["settings", "set", "face_min_cluster_size", "2"],
+  ["faces", "cluster", "--full"],
+  ["settings", "set", "face_match_threshold", "0.62"],
+  ["settings", "set", "face_min_cluster_size", "4"],
+  ["faces", "cluster", "--full"],
+  ["faces", "cluster"],
+  ["faces", "detect"],
+  ["faces", "detect", "--retry-errors"]
+]

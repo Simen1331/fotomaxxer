@@ -1,0 +1,1489 @@
+{
+ "prompts": [
+  {
+   "focus": null,
+   "categories": null,
+   "prompt": "Du analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": [\"<3–8 frie stikkord på norsk>\"]\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  },
+  {
+   "focus": "",
+   "categories": [],
+   "prompt": "Du analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": [\"<3–8 frie stikkord på norsk>\"]\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  },
+  {
+   "focus": "   ",
+   "categories": [
+    "materiale"
+   ],
+   "prompt": "Du analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": [\"<3–8 frie stikkord på norsk>\"]\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  },
+  {
+   "focus": "Design og håndverk",
+   "categories": [],
+   "prompt": "Fokusområde: Design og håndverk.\nNår motiver innen dette området er i bildet, gi flere og mer spesifikke stikkord\n(materiale, teknikk, stil, periode der relevant) og en rikere description. Er fokusområdet\nikke representert i bildet, merk helt som vanlig.\n\nDu analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": [\"<3–12 frie stikkord på norsk>\"]\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  },
+  {
+   "focus": "  Design og håndverk  ",
+   "categories": null,
+   "prompt": "Fokusområde: Design og håndverk.\nNår motiver innen dette området er i bildet, gi flere og mer spesifikke stikkord\n(materiale, teknikk, stil, periode der relevant) og en rikere description. Er fokusområdet\nikke representert i bildet, merk helt som vanlig.\n\nDu analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": [\"<3–12 frie stikkord på norsk>\"]\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  },
+  {
+   "focus": "Design og håndverk",
+   "categories": [
+    "materiale",
+    "teknikk",
+    "stil"
+   ],
+   "prompt": "Fokusområde: Design og håndverk.\nNår motiver innen dette området er i bildet, gi spesifikke stikkord gruppert i disse kategoriene: materiale, teknikk, stil.\nBruk grunnform (entall, ikke bøyning), 0–4 stikkord per kategori, kun der det er dekning i\nbildet. Er fokusområdet ikke representert i bildet, merk helt som vanlig.\n\nDu analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": { \"materiale\": [\"<grunnform>\"], \"teknikk\": [\"<grunnform>\"], \"stil\": [\"<grunnform>\"] }\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  },
+  {
+   "focus": "Fugler",
+   "categories": [
+    "  art ",
+    "",
+    "atferd"
+   ],
+   "prompt": "Fokusområde: Fugler.\nNår motiver innen dette området er i bildet, gi spesifikke stikkord gruppert i disse kategoriene: art, atferd.\nBruk grunnform (entall, ikke bøyning), 0–4 stikkord per kategori, kun der det er dekning i\nbildet. Er fokusområdet ikke representert i bildet, merk helt som vanlig.\n\nDu analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": { \"art\": [\"<grunnform>\"], \"atferd\": [\"<grunnform>\"] }\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  },
+  {
+   "focus": "Fokus med \"anførsel\" og {klammer}",
+   "categories": [
+    "kategori med \"quote\"",
+    "{x}"
+   ],
+   "prompt": "Fokusområde: Fokus med \"anførsel\" og {klammer}.\nNår motiver innen dette området er i bildet, gi spesifikke stikkord gruppert i disse kategoriene: kategori med \"quote\", {x}.\nBruk grunnform (entall, ikke bøyning), 0–4 stikkord per kategori, kun der det er dekning i\nbildet. Er fokusområdet ikke representert i bildet, merk helt som vanlig.\n\nDu analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": { \"kategori med \"quote\"\": [\"<grunnform>\"], \"{x}\": [\"<grunnform>\"] }\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  },
+  {
+   "focus": "Linje en\nlinje to",
+   "categories": [
+    "æøå"
+   ],
+   "prompt": "Fokusområde: Linje en\nlinje to.\nNår motiver innen dette området er i bildet, gi spesifikke stikkord gruppert i disse kategoriene: æøå.\nBruk grunnform (entall, ikke bøyning), 0–4 stikkord per kategori, kun der det er dekning i\nbildet. Er fokusområdet ikke representert i bildet, merk helt som vanlig.\n\nDu analyserer ett privat familiebilde for et fotoalbum-arkiv. Svar KUN med JSON,\ningen forklaring, på dette formatet:\n{\n  \"scene\": \"<kort scene, f.eks. strand, skog, kjøkken>\",\n  \"event_type\": \"<hverdag|bursdag|jul|ferie|bryllup|tur|fest|annet>\",\n  \"season\": \"<vinter|vår|sommer|høst|null>\",\n  \"indoor_outdoor\": \"<ute|inne|null>\",\n  \"person_count\": <heltall, antall synlige personer>,\n  \"description\": \"<1–2 setninger på norsk om hva bildet viser>\",\n  \"tags\": { \"æøå\": [\"<grunnform>\"] }\n}\nBruk null der du er usikker. Ikke gjett på navn eller identitet."
+  }
+ ],
+ "contents": [
+  {
+   "content": "{\"scene\": \"strand\", \"event_type\": \"ferie\", \"season\": \"sommer\", \"indoor_outdoor\": \"ute\", \"person_count\": 3, \"description\": \"Tre personer på stranda.\", \"tags\": [\"Strand\", \"hav\", \"strand\"]}",
+   "result": {
+    "scene": "strand",
+    "event_type": "ferie",
+    "season": "sommer",
+    "indoor_outdoor": "ute",
+    "person_count": 3,
+    "description": "Tre personer på stranda.",
+    "tags": [
+     "strand",
+     "hav"
+    ],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "```json\n{\"scene\": \"skog\", \"tags\": [\"tre\"]}\n```",
+   "result": {
+    "scene": "skog",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [
+     "tre"
+    ],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "```JSON\n{\"scene\": \"skog\"}\n```",
+   "result": {
+    "scene": "skog",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "```\n{\"scene\": \"kjøkken\"}\n```",
+   "result": {
+    "scene": "kjøkken",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "```{\"scene\": \"x\"}",
+   "result": {
+    "scene": "x",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "``` json {\"scene\": \"y\"} ``` etter",
+   "result": {
+    "scene": "y",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "Her er svaret: {\"scene\": \"hage\", \"tags\": [\"blomst\"]} Håper det hjelper!",
+   "result": {
+    "scene": "hage",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [
+     "blomst"
+    ],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "Beklager, jeg kan ikke analysere dette bildet.",
+   "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "content": "",
+   "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "content": "   ",
+   "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "content": "[1, 2, 3]",
+   "error": "AttributeError: 'list' object has no attribute 'get'"
+  },
+  {
+   "content": "\"bare en streng\"",
+   "error": "AttributeError: 'str' object has no attribute 'get'"
+  },
+  {
+   "content": "42",
+   "error": "AttributeError: 'int' object has no attribute 'get'"
+  },
+  {
+   "content": "null",
+   "error": "AttributeError: 'NoneType' object has no attribute 'get'"
+  },
+  {
+   "content": "{\"scene\": null, \"event_type\": \"null\", \"season\": \"NULL\", \"indoor_outdoor\": \"  \", \"person_count\": null, \"description\": \" Nullus \"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": "Nullus",
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": \" 4 \"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": 4,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": \"2.5\"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": 2.7}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": 2,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": -2.7}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": -2,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": true}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": 1,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": \"+7\"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": 7,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": \"1_000\"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": 1000,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": \"\"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": []}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": \"tre\"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": \"007\"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": 7,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"person_count\": 1e3}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": 1000,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"scene\": 12, \"event_type\": 1.5, \"season\": true, \"indoor_outdoor\": false, \"description\": [\"a\", \"b'c\", \"d\\\"e\"]}",
+   "result": {
+    "scene": "12",
+    "event_type": "1.5",
+    "season": "True",
+    "indoor_outdoor": "False",
+    "person_count": null,
+    "description": "['a', \"b'c\", 'd\"e']",
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"description\": {\"k\": \"vår\", \"n\": null, \"l\": [1, 2.0, 1e-05]}}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": "{'k': 'vår', 'n': None, 'l': [1, 2.0, 1e-05]}",
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"scene\": \"ok\"} trailing {\"x\": 1}",
+   "error": "JSONDecodeError: Extra data: line 1 column 17 (char 16)"
+  },
+  {
+   "content": "tekst {ikke json} mer tekst",
+   "error": "JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+  },
+  {
+   "content": "{\"scene\": \"uavsluttet\"",
+   "error": "JSONDecodeError: Expecting ',' delimiter: line 1 column 23 (char 22)"
+  },
+  {
+   "content": "{\"tags\": {\"materiale\": [\"Eik\", \"bjørk\"], \"teknikk\": \"dreid\", \" stil \": [\"eik\", \"Skandinavisk\"], \"\": [\"uten\"]}}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [
+     "eik",
+     "bjørk",
+     "dreid",
+     "skandinavisk",
+     "uten"
+    ],
+    "tag_categories": {
+     "eik": "materiale",
+     "bjørk": "materiale",
+     "dreid": "teknikk",
+     "skandinavisk": "stil"
+    }
+   }
+  },
+  {
+   "content": "{\"tags\": {\"materiale\": [1, true, 2.5, null, \"  \", [\"nested\"], \"Ok\"]}}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [
+     "1",
+     "true",
+     "ok"
+    ],
+    "tag_categories": {
+     "1": "materiale",
+     "true": "materiale",
+     "ok": "materiale"
+    }
+   }
+  },
+  {
+   "content": "{\"tags\": [\"A\", \" a \", 5, false, null, 1.5, \"\", \"ÆØÅ\", \"Σ\", {\"x\": 1}]}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [
+     "a",
+     "5",
+     "false",
+     "æøå",
+     "σ"
+    ],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"tags\": \"bare en streng\"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"tags\": null}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"tags\": {}}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"tags\": []}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"scene\": \"dobbel\", \"scene\": \"sist\"}",
+   "result": {
+    "scene": "sist",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"description\": \"Linje\\nny \\u00e6 \\ud83d\\ude00 emoji\"}",
+   "result": {
+    "scene": null,
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": "Linje\nny æ 😀 emoji",
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "\n\n  {\"scene\": \"innrykk\"}  \n",
+   "result": {
+    "scene": "innrykk",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "{\"scene\": \"x\", \"tags\": [\"a\"]}\n```",
+   "result": {
+    "scene": "x",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [
+     "a"
+    ],
+    "tag_categories": {}
+   }
+  },
+  {
+   "content": "json {\"scene\": \"uten gjerde\"}",
+   "result": {
+    "scene": "uten gjerde",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  }
+ ],
+ "responses": [
+  {
+   "raw": {
+    "choices": [
+     {
+      "message": {
+       "content": "{\"scene\": \"x\"}"
+      }
+     }
+    ],
+    "usage": {
+     "cost": 1e-05
+    }
+   },
+   "result": {
+    "scene": "x",
+    "event_type": null,
+    "season": null,
+    "indoor_outdoor": null,
+    "person_count": null,
+    "description": null,
+    "tags": [],
+    "tag_categories": {}
+   }
+  },
+  {
+   "raw": {},
+   "error": "KeyError: 'choices'"
+  },
+  {
+   "raw": {
+    "choices": []
+   },
+   "error": "IndexError: list index out of range"
+  },
+  {
+   "raw": {
+    "choices": {}
+   },
+   "error": "KeyError: 0"
+  },
+  {
+   "raw": {
+    "choices": "abc"
+   },
+   "error": "TypeError: string indices must be integers, not 'str'"
+  },
+  {
+   "raw": {
+    "choices": ""
+   },
+   "error": "IndexError: string index out of range"
+  },
+  {
+   "raw": {
+    "choices": [
+     {
+      "message": {
+       "content": null
+      }
+     }
+    ]
+   },
+   "error": "AttributeError: 'NoneType' object has no attribute 'strip'"
+  },
+  {
+   "raw": {
+    "choices": [
+     {
+      "message": {
+       "content": [
+        "a"
+       ]
+      }
+     }
+    ]
+   },
+   "error": "AttributeError: 'list' object has no attribute 'strip'"
+  },
+  {
+   "raw": {
+    "choices": [
+     {
+      "message": {
+       "content": {
+        "scene": "x"
+       }
+      }
+     }
+    ]
+   },
+   "error": "AttributeError: 'dict' object has no attribute 'strip'"
+  },
+  {
+   "raw": {
+    "choices": [
+     {
+      "message": {
+       "content": 5
+      }
+     }
+    ]
+   },
+   "error": "AttributeError: 'int' object has no attribute 'strip'"
+  },
+  {
+   "raw": {
+    "choices": [
+     {
+      "message": {}
+     }
+    ]
+   },
+   "error": "KeyError: 'content'"
+  },
+  {
+   "raw": {
+    "choices": [
+     null
+    ]
+   },
+   "error": "TypeError: 'NoneType' object is not subscriptable"
+  },
+  {
+   "raw": {
+    "choices": [
+     5
+    ]
+   },
+   "error": "TypeError: 'int' object is not subscriptable"
+  },
+  {
+   "raw": {
+    "choices": [
+     2.5
+    ]
+   },
+   "error": "TypeError: 'float' object is not subscriptable"
+  },
+  {
+   "raw": {
+    "choices": [
+     true
+    ]
+   },
+   "error": "TypeError: 'bool' object is not subscriptable"
+  },
+  {
+   "raw": {
+    "choices": [
+     [
+      1
+     ]
+    ]
+   },
+   "error": "TypeError: list indices must be integers or slices, not str"
+  },
+  {
+   "raw": {
+    "choices": [
+     {
+      "message": "abc"
+     }
+    ]
+   },
+   "error": "TypeError: string indices must be integers, not 'str'"
+  },
+  {
+   "raw": {
+    "choices": [
+     {
+      "message": ""
+     }
+    ]
+   },
+   "error": "TypeError: string indices must be integers, not 'str'"
+  },
+  {
+   "raw": [
+    1
+   ],
+   "error": "TypeError: list indices must be integers or slices, not str"
+  },
+  {
+   "raw": [],
+   "error": "TypeError: list indices must be integers or slices, not str"
+  },
+  {
+   "raw": "x",
+   "error": "TypeError: string indices must be integers, not 'str'"
+  },
+  {
+   "raw": 5,
+   "error": "TypeError: 'int' object is not subscriptable"
+  },
+  {
+   "raw": null,
+   "error": "TypeError: 'NoneType' object is not subscriptable"
+  },
+  {
+   "raw": true,
+   "error": "TypeError: 'bool' object is not subscriptable"
+  },
+  {
+   "raw": 1.5,
+   "error": "TypeError: 'float' object is not subscriptable"
+  }
+ ],
+ "json_errors": [
+  {
+   "text": "",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": " ",
+   "error": "Expecting value: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "x",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "{",
+   "error": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "[",
+   "error": "Expecting value: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "]",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "}",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "{\"a\"",
+   "error": "Expecting ':' delimiter: line 1 column 5 (char 4)"
+  },
+  {
+   "text": "{\"a\":",
+   "error": "Expecting value: line 1 column 6 (char 5)"
+  },
+  {
+   "text": "{\"a\": 1",
+   "error": "Expecting ',' delimiter: line 1 column 8 (char 7)"
+  },
+  {
+   "text": "{\"a\": 1,",
+   "error": "Expecting property name enclosed in double quotes: line 1 column 9 (char 8)"
+  },
+  {
+   "text": "{\"a\": 1,}",
+   "error": "Illegal trailing comma before end of object: line 1 column 8 (char 7)"
+  },
+  {
+   "text": "{\"a\": 1 , }",
+   "error": "Illegal trailing comma before end of object: line 1 column 9 (char 8)"
+  },
+  {
+   "text": "[1,]",
+   "error": "Illegal trailing comma before end of array: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "[1 , ]",
+   "error": "Illegal trailing comma before end of array: line 1 column 4 (char 3)"
+  },
+  {
+   "text": "[1 2]",
+   "error": "Expecting ',' delimiter: line 1 column 4 (char 3)"
+  },
+  {
+   "text": "{\"a\" 1}",
+   "error": "Expecting ':' delimiter: line 1 column 6 (char 5)"
+  },
+  {
+   "text": "{1: 2}",
+   "error": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "{\"a\": 1 \"b\": 2}",
+   "error": "Expecting ',' delimiter: line 1 column 9 (char 8)"
+  },
+  {
+   "text": "\"abc",
+   "error": "Unterminated string starting at: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "\"a\\qb\"",
+   "error": "Invalid \\escape: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "\"\\u12\"",
+   "error": "Invalid \\uXXXX escape: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "\"\\u12G4\"",
+   "error": "Invalid \\uXXXX escape: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "\"\\u1234",
+   "error": "Unterminated string starting at: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "\"\\u123",
+   "error": "Invalid \\uXXXX escape: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "\"\\",
+   "error": "Unterminated string starting at: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "\"a\u0001b\"",
+   "error": "Invalid control character at: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "\"a\nb\"",
+   "error": "Invalid control character at: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "\"\\ud83d\\ude0\"",
+   "error": "Invalid \\uXXXX escape: line 1 column 9 (char 8)"
+  },
+  {
+   "text": "\"\\ud83d\\uZZZZ\"",
+   "error": "Invalid \\uXXXX escape: line 1 column 9 (char 8)"
+  },
+  {
+   "text": "tru",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "nul",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "fals",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "-",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "-x",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "01",
+   "error": "Extra data: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "1.",
+   "error": "Extra data: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "1e",
+   "error": "Extra data: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "1.5e+",
+   "error": "Extra data: line 1 column 4 (char 3)"
+  },
+  {
+   "text": "1.x",
+   "error": "Extra data: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "[1, 2",
+   "error": "Expecting ',' delimiter: line 1 column 6 (char 5)"
+  },
+  {
+   "text": "{\"a\": [1, {\"b\": }]}",
+   "error": "Expecting value: line 1 column 17 (char 16)"
+  },
+  {
+   "text": "﻿{}",
+   "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"
+  },
+  {
+   "text": "[\"a\" , ]",
+   "error": "Illegal trailing comma before end of array: line 1 column 6 (char 5)"
+  },
+  {
+   "text": "{} x",
+   "error": "Extra data: line 1 column 4 (char 3)"
+  },
+  {
+   "text": "{}\n\n  x",
+   "error": "Extra data: line 3 column 3 (char 6)"
+  },
+  {
+   "text": "æøå",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "{\"æ\": \"ø\" \"å\"}",
+   "error": "Expecting ',' delimiter: line 1 column 11 (char 10)"
+  },
+  {
+   "text": "\n\n{",
+   "error": "Expecting property name enclosed in double quotes: line 3 column 2 (char 3)"
+  },
+  {
+   "text": "[\n1,\n2\n",
+   "error": "Expecting ',' delimiter: line 4 column 1 (char 7)"
+  },
+  {
+   "text": "[-]",
+   "error": "Expecting value: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "[--1]",
+   "error": "Expecting value: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "Infinityx",
+   "error": "Extra data: line 1 column 9 (char 8)"
+  },
+  {
+   "text": "-Inf",
+   "error": "Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "[NaN",
+   "error": "Expecting ',' delimiter: line 1 column 5 (char 4)"
+  },
+  {
+   "text": "{\"a\": tru}",
+   "error": "Expecting value: line 1 column 7 (char 6)"
+  },
+  {
+   "text": "[true false]",
+   "error": "Expecting ',' delimiter: line 1 column 7 (char 6)"
+  },
+  {
+   "text": "1 2",
+   "error": "Extra data: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "[1]]",
+   "error": "Extra data: line 1 column 4 (char 3)"
+  },
+  {
+   "text": "{\"a\": 1}}",
+   "error": "Extra data: line 1 column 9 (char 8)"
+  },
+  {
+   "text": "\t\r\n x",
+   "error": "Expecting value: line 2 column 2 (char 4)"
+  },
+  {
+   "text": "[ ]",
+   "error": "Expecting value: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "{\"a\": 1}",
+   "error": "Expecting value: line 1 column 6 (char 5)"
+  },
+  {
+   "text": "{'a': 1}",
+   "error": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "[.5]",
+   "error": "Expecting value: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "[+1]",
+   "error": "Expecting value: line 1 column 2 (char 1)"
+  },
+  {
+   "text": "[0x10]",
+   "error": "Expecting ',' delimiter: line 1 column 3 (char 2)"
+  },
+  {
+   "text": "\"æøå",
+   "error": "Unterminated string starting at: line 1 column 1 (char 0)"
+  },
+  {
+   "text": "[\"ok\", \"æ\u0002\"]",
+   "error": "Invalid control character at: line 1 column 10 (char 9)"
+  }
+ ],
+ "tags": [
+  {
+   "tags": [
+    "eik",
+    "bjørk"
+   ],
+   "tag_categories": {},
+   "input": [
+    "Eik",
+    "eik",
+    " EIK ",
+    "bjørk"
+   ]
+  },
+  {
+   "tags": [
+    "eik",
+    "dreid"
+   ],
+   "tag_categories": {
+    "eik": "materiale",
+    "dreid": "teknikk"
+   },
+   "input": {
+    "materiale": [
+     "eik"
+    ],
+    "teknikk": [
+     "eik",
+     "dreid"
+    ]
+   }
+  },
+  {
+   "tags": [
+    "eik"
+   ],
+   "tag_categories": {
+    "eik": "materiale"
+   },
+   "input": {
+    "materiale": "eik"
+   }
+  },
+  {
+   "tags": [
+    "x"
+   ],
+   "tag_categories": {},
+   "input": {
+    " ": [
+     "x"
+    ]
+   }
+  },
+  {
+   "tags": [],
+   "tag_categories": {},
+   "input": {
+    "a": null
+   }
+  },
+  {
+   "tags": [
+    "1",
+    "true"
+   ],
+   "tag_categories": {
+    "1": "a",
+    "true": "a"
+   },
+   "input": {
+    "a": [
+     null,
+     1,
+     true
+    ]
+   }
+  },
+  {
+   "tags": [],
+   "tag_categories": {},
+   "input": "streng"
+  },
+  {
+   "tags": [],
+   "tag_categories": {},
+   "input": 7
+  },
+  {
+   "tags": [],
+   "tag_categories": {},
+   "input": null
+  },
+  {
+   "tags": [],
+   "tag_categories": {},
+   "input": []
+  },
+  {
+   "tags": [],
+   "tag_categories": {},
+   "input": {}
+  }
+ ],
+ "categories": [
+  {
+   "input": null,
+   "output": []
+  },
+  {
+   "input": "",
+   "output": []
+  },
+  {
+   "input": "[]",
+   "output": []
+  },
+  {
+   "input": "[\"materiale\", \"teknikk\"]",
+   "output": [
+    "materiale",
+    "teknikk"
+   ]
+  },
+  {
+   "input": "[\" materiale \", \"\", \"  \", \"stil\"]",
+   "output": [
+    "materiale",
+    "stil"
+   ]
+  },
+  {
+   "input": "[1, 2.5, true, null, \"x\"]",
+   "output": [
+    "1",
+    "2.5",
+    "True",
+    "None",
+    "x"
+   ]
+  },
+  {
+   "input": "[\"a\", [\"b\"], {\"c\": 1}]",
+   "output": [
+    "a",
+    "['b']",
+    "{'c': 1}"
+   ]
+  },
+  {
+   "input": "ikke json",
+   "output": []
+  },
+  {
+   "input": "{\"a\": 1}",
+   "output": []
+  },
+  {
+   "input": "\"streng\"",
+   "output": []
+  },
+  {
+   "input": "null",
+   "output": []
+  }
+ ],
+ "costs": [
+  {
+   "input": {
+    "usage": {
+     "cost": 0.000123
+    }
+   },
+   "output": 0.000123
+  },
+  {
+   "input": {
+    "usage": {
+     "cost": 1.2e-05
+    }
+   },
+   "output": 1.2e-05
+  },
+  {
+   "input": {
+    "usage": {
+     "cost": 0
+    }
+   },
+   "output": 0.0
+  },
+  {
+   "input": {
+    "usage": {
+     "cost": "0.0005"
+    }
+   },
+   "output": 0.0005
+  },
+  {
+   "input": {
+    "usage": {
+     "cost": " 1e-4 "
+    }
+   },
+   "output": 0.0001
+  },
+  {
+   "input": {
+    "usage": {
+     "cost": "gratis"
+    }
+   },
+   "output": null
+  },
+  {
+   "input": {
+    "usage": {
+     "cost": null
+    }
+   },
+   "output": null
+  },
+  {
+   "input": {
+    "usage": {
+     "cost": true
+    }
+   },
+   "output": 1.0
+  },
+  {
+   "input": {
+    "usage": {
+     "cost": [
+      1
+     ]
+    }
+   },
+   "output": null
+  },
+  {
+   "input": {
+    "usage": {}
+   },
+   "output": null
+  },
+  {
+   "input": {
+    "usage": null
+   },
+   "output": null
+  },
+  {
+   "input": {
+    "usage": [
+     1
+    ]
+   },
+   "output": null
+  },
+  {
+   "input": {},
+   "output": null
+  },
+  {
+   "input": [
+    1,
+    2
+   ],
+   "output": null
+  }
+ ],
+ "floats": [
+  {
+   "value": 0.0,
+   "repr": "0.0",
+   "dumps": "{\"v\": [0.0]}"
+  },
+  {
+   "value": -0.0,
+   "repr": "-0.0",
+   "dumps": "{\"v\": [-0.0]}"
+  },
+  {
+   "value": 1.0,
+   "repr": "1.0",
+   "dumps": "{\"v\": [1.0]}"
+  },
+  {
+   "value": 0.2,
+   "repr": "0.2",
+   "dumps": "{\"v\": [0.2]}"
+  },
+  {
+   "value": 0.30000000000000004,
+   "repr": "0.30000000000000004",
+   "dumps": "{\"v\": [0.30000000000000004]}"
+  },
+  {
+   "value": 1.5,
+   "repr": "1.5",
+   "dumps": "{\"v\": [1.5]}"
+  },
+  {
+   "value": 100.0,
+   "repr": "100.0",
+   "dumps": "{\"v\": [100.0]}"
+  },
+  {
+   "value": 0.0001,
+   "repr": "0.0001",
+   "dumps": "{\"v\": [0.0001]}"
+  },
+  {
+   "value": 1e-05,
+   "repr": "1e-05",
+   "dumps": "{\"v\": [1e-05]}"
+  },
+  {
+   "value": 9.5e-05,
+   "repr": "9.5e-05",
+   "dumps": "{\"v\": [9.5e-05]}"
+  },
+  {
+   "value": 1.2345e-05,
+   "repr": "1.2345e-05",
+   "dumps": "{\"v\": [1.2345e-05]}"
+  },
+  {
+   "value": 0.000123,
+   "repr": "0.000123",
+   "dumps": "{\"v\": [0.000123]}"
+  },
+  {
+   "value": 0.0001234,
+   "repr": "0.0001234",
+   "dumps": "{\"v\": [0.0001234]}"
+  },
+  {
+   "value": 1000000000000000.0,
+   "repr": "1000000000000000.0",
+   "dumps": "{\"v\": [1000000000000000.0]}"
+  },
+  {
+   "value": 1e+16,
+   "repr": "1e+16",
+   "dumps": "{\"v\": [1e+16]}"
+  },
+  {
+   "value": 1.5e+16,
+   "repr": "1.5e+16",
+   "dumps": "{\"v\": [1.5e+16]}"
+  },
+  {
+   "value": 1.2345678901234568e+17,
+   "repr": "1.2345678901234568e+17",
+   "dumps": "{\"v\": [1.2345678901234568e+17]}"
+  },
+  {
+   "value": 1e+22,
+   "repr": "1e+22",
+   "dumps": "{\"v\": [1e+22]}"
+  },
+  {
+   "value": 1e-07,
+   "repr": "1e-07",
+   "dumps": "{\"v\": [1e-07]}"
+  },
+  {
+   "value": 2.5e-10,
+   "repr": "2.5e-10",
+   "dumps": "{\"v\": [2.5e-10]}"
+  },
+  {
+   "value": 1.7976931348623157e+308,
+   "repr": "1.7976931348623157e+308",
+   "dumps": "{\"v\": [1.7976931348623157e+308]}"
+  },
+  {
+   "value": 5e-324,
+   "repr": "5e-324",
+   "dumps": "{\"v\": [5e-324]}"
+  },
+  {
+   "value": 3.14159265358979,
+   "repr": "3.14159265358979",
+   "dumps": "{\"v\": [3.14159265358979]}"
+  },
+  {
+   "value": 0.3333333333333333,
+   "repr": "0.3333333333333333",
+   "dumps": "{\"v\": [0.3333333333333333]}"
+  },
+  {
+   "value": 0.6666666666666666,
+   "repr": "0.6666666666666666",
+   "dumps": "{\"v\": [0.6666666666666666]}"
+  },
+  {
+   "value": 0.30000000000000004,
+   "repr": "0.30000000000000004",
+   "dumps": "{\"v\": [0.30000000000000004]}"
+  },
+  {
+   "value": 1234567.0,
+   "repr": "1234567.0",
+   "dumps": "{\"v\": [1234567.0]}"
+  },
+  {
+   "value": 0.5,
+   "repr": "0.5",
+   "dumps": "{\"v\": [0.5]}"
+  },
+  {
+   "value": 4.35e-06,
+   "repr": "4.35e-06",
+   "dumps": "{\"v\": [4.35e-06]}"
+  }
+ ]
+}

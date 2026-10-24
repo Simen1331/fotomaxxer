@@ -1,0 +1,1662 @@
+{
+ "beskrivelse": "Bilde-API-et på en kopi av py-golden (926 bilder, ansikter og personer): prep_sql legger inn steder (æøå), GPS med vanskelige flyttall, manglende dato/kamera, ekskluderte bilder, duplikatfiler, håndlagde AI-tagger og tagger, personnavn og låste ansikter; 8 bilder merkes mot fake_openrouter. Dekker alle filtrene alene og kombinert, grenser og 422 for limit/offset, /images/ids, detalj, PATCH (også Starlette-rutingen for PATCH /images/ids) og fasetter",
+ "seed_dir": "~/dev/fotomaxxer-testlib/py-golden",
+ "prep_sql": "UPDATE processing_state SET status = 'done' WHERE stage = 'ai' AND image_id NOT IN (1, 4, 5, 7, 8, 10, 15, 29);\nUPDATE images SET place_name = 'Bø i Telemark', gps_lat = 59.4105, gps_lon = 9.0678 WHERE id % 7 = 0;\nUPDATE images SET place_name = 'Ål', gps_lat = 60.6297, gps_lon = 8.5615 WHERE id % 11 = 0 AND place_name IS NULL;\nUPDATE images SET place_name = 'Oslo', gps_lat = 59.9139, gps_lon = 10.7522 WHERE id % 13 = 0 AND place_name IS NULL;\nUPDATE images SET place_name = '' WHERE id = 50;\nUPDATE images SET place_name = 'Æsøya_100%', gps_lat = 0.0000001, gps_lon = -0.0000535 WHERE id = 51;\nUPDATE images SET gps_lat = 1e16, gps_lon = 123456789.125 WHERE id = 52;\nUPDATE images SET gps_lat = -0.0, gps_lon = 0 WHERE id = 53;\nUPDATE images SET taken_at = NULL, year = NULL, season = NULL WHERE id IN (3, 9, 27, 400);\nUPDATE images SET season = 'vår' WHERE id % 17 = 0 AND season IS NOT NULL;\nUPDATE images SET year = 1999 WHERE id = 60;\nUPDATE images SET camera_make = NULL, camera_model = NULL, width = NULL, height = NULL WHERE id = 6;\nUPDATE images SET excluded = 1 WHERE id IN (2, 14, 21, 63);\nUPDATE images SET excluded = 1 WHERE id = (SELECT image_id FROM faces GROUP BY image_id ORDER BY COUNT(*) DESC, image_id LIMIT 1);\nINSERT INTO sources (id, root_path) VALUES (2, '/finnes/ikke/kopi');\nINSERT INTO files (image_id, source_id, path) SELECT id, 2, '/finnes/ikke/kopi/kopi-' || id || '.jpg' FROM images WHERE id IN (100, 103);\nINSERT INTO files (image_id, source_id, path) SELECT (SELECT image_id FROM faces GROUP BY image_id ORDER BY COUNT(*) DESC, image_id LIMIT 1), 2, '/finnes/ikke/kopi/flest-ansikter.jpg';\nINSERT INTO ai_tags (image_id, provider, scene, event_type, season_ai, indoor_outdoor, person_count, description, cost, tagged_at) VALUES (100, 'openrouter:test/handlaget', 'strand', 'ferie', 'sommer', 'outdoor', 3, 'Tre personer på stranda i Bø, 100% sol', 0.0000535, '2026-10-01 10:00:00'), (100, 'openrouter:test/handlaget', 'hytte', 'bursdag', 'sommer', 'indoor', 2, 'Eldre merking som ikke skal vises', 0.0001, '2026-09-01 10:00:00'), (101, 'openrouter:test/handlaget', 'fjell', 'tur', 'høst', 'outdoor', 0, 'Fjelltur over Ålfjell med ørret i bekken', NULL, '2026-10-01 10:00:00'), (102, 'openrouter:test/handlaget', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-01 10:00:00'), (103, 'openrouter:test/handlaget', 'stue', 'jul', 'vinter', 'indoor', 5, 'Julaften i stua_med «sitater» og \"anførsel\"', NULL, '2026-10-01 10:00:00'), (104, 'openrouter:test/handlaget', 'stue', 'jul', 'vinter', 'indoor', 1, 'Pakker under treet', NULL, '2026-10-01 10:00:00'), (105, 'openrouter:test/handlaget', 'strand', 'ferie', 'sommer', 'outdoor', 2, 'STRAND med store bokstaver', NULL, '2026-10-01 10:00:00'), (106, 'openrouter:test/handlaget', 'hage', 'Bursdag', 'vår', 'Outdoor', 4, 'Hage i mai', NULL, '2026-10-01 10:00:00'), (107, 'openrouter:test/handlaget', '', '', '', '', 0, '', NULL, '2026-10-01 10:00:00'), (14, 'openrouter:test/handlaget', 'skjult', 'skjult-hendelse', 'sommer', 'outdoor', 1, 'Ekskludert bilde', NULL, '2026-10-01 10:00:00');\nINSERT INTO tags (id, name, category) VALUES (901, 'strand', NULL), (902, 'ørret', 'mat'), (903, 'Ål', 'sted'), (904, '100%', 'annet'), (905, 'under_strek', NULL), (906, 'jul', 'hendelse'), (907, 'skjult-tagg', NULL), (908, 'Strand', NULL);\nINSERT INTO image_tags (image_id, tag_id) VALUES (100, 901), (100, 904), (100, 903), (105, 901), (105, 908), (101, 902), (101, 903), (103, 906), (103, 905), (104, 906), (14, 907), (14, 901);\nUPDATE persons SET name = 'Åse' WHERE cluster_id = (SELECT cluster_id FROM faces WHERE cluster_id IS NOT NULL GROUP BY cluster_id ORDER BY COUNT(*) DESC, cluster_id LIMIT 1 OFFSET 0);\nUPDATE persons SET name = 'Bjørn' WHERE cluster_id = (SELECT cluster_id FROM faces WHERE cluster_id IS NOT NULL GROUP BY cluster_id ORDER BY COUNT(*) DESC, cluster_id LIMIT 1 OFFSET 1);\nUPDATE persons SET name = 'ærlig' WHERE cluster_id = (SELECT cluster_id FROM faces WHERE cluster_id IS NOT NULL GROUP BY cluster_id ORDER BY COUNT(*) DESC, cluster_id LIMIT 1 OFFSET 3);\nUPDATE persons SET name = 'Zorro' WHERE cluster_id = (SELECT cluster_id FROM faces WHERE cluster_id IS NOT NULL GROUP BY cluster_id ORDER BY COUNT(*) ASC, cluster_id LIMIT 1 OFFSET 0);\nUPDATE persons SET name = 'Anne' WHERE cluster_id = (SELECT cluster_id FROM faces WHERE cluster_id IS NOT NULL GROUP BY cluster_id ORDER BY COUNT(*) ASC, cluster_id LIMIT 1 OFFSET 2);\nUPDATE faces SET locked = 1 WHERE id % 40 = 0;",
+ "fake_openrouter": true,
+ "steps": [
+  {
+   "method": "PUT",
+   "path": "/api/settings/openrouter_api_key",
+   "json": {
+    "value": "sk-or-v1-falsk-0123456789"
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/api/jobs/tag",
+   "name": "tag 8 bilder mot fake_openrouter",
+   "json": {
+    "workers": 1
+   },
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current",
+   "name": "tag-jobben ferdig"
+  },
+  {
+   "var": "top",
+   "sql": "SELECT image_id FROM faces GROUP BY image_id ORDER BY COUNT(*) DESC, image_id LIMIT 1"
+  },
+  {
+   "var": "p_ase",
+   "sql": "SELECT cluster_id FROM persons WHERE name = 'Åse'"
+  },
+  {
+   "var": "p_bjorn",
+   "sql": "SELECT cluster_id FROM persons WHERE name = 'Bjørn'"
+  },
+  {
+   "var": "p_zorro",
+   "sql": "SELECT cluster_id FROM persons WHERE name = 'Zorro'"
+  },
+  {
+   "var": "p_uten",
+   "sql": "SELECT cluster_id FROM persons WHERE name IS NULL ORDER BY cluster_id LIMIT 1"
+  },
+  {
+   "var": "img_locked",
+   "sql": "SELECT image_id FROM faces WHERE locked = 1 ORDER BY id LIMIT 1"
+  },
+  {
+   "var": "img_noclust",
+   "sql": "SELECT image_id FROM faces WHERE cluster_id IS NULL ORDER BY id LIMIT 1"
+  },
+  {
+   "var": "img_noface",
+   "sql": "SELECT id FROM images WHERE id NOT IN (SELECT image_id FROM faces) AND excluded = 0 ORDER BY id LIMIT 1"
+  },
+  {
+   "var": "img_jobtag",
+   "sql": "SELECT image_id FROM image_tags WHERE tag_id NOT BETWEEN 901 AND 908 ORDER BY image_id LIMIT 1"
+  },
+  {
+   "var": "tag_job",
+   "sql": "SELECT name FROM tags WHERE id NOT BETWEEN 901 AND 908 ORDER BY id LIMIT 1"
+  },
+  {
+   "method": "GET",
+   "path": "/api/facets",
+   "name": "fasetter etter tag-jobben"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "standardliste (200, uten ekskluderte)"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "paginering {'limit': 1}",
+   "query": {
+    "limit": 1
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "paginering {'limit': 1000}",
+   "query": {
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "paginering {'limit': 5, 'offset': 920}",
+   "query": {
+    "limit": 5,
+    "offset": 920
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "paginering {'limit': 3, 'offset': 100000}",
+   "query": {
+    "limit": 3,
+    "offset": 100000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "paginering {'limit': '1.0'}",
+   "query": {
+    "limit": "1.0"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "paginering {'limit': ' 7 '}",
+   "query": {
+    "limit": " 7 "
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "paginering {'limit': '1_0'}",
+   "query": {
+    "limit": "1_0"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "paginering {'limit': '+2', 'offset': '0'}",
+   "query": {
+    "limit": "+2",
+    "offset": "0"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'limit': 0}",
+   "query": {
+    "limit": 0
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'limit': 1001}",
+   "query": {
+    "limit": 1001
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'limit': -1}",
+   "query": {
+    "limit": -1
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'limit': 'abc'}",
+   "query": {
+    "limit": "abc"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'limit': ''}",
+   "query": {
+    "limit": ""
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'limit': '1e2'}",
+   "query": {
+    "limit": "1e2"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'limit': '1.5'}",
+   "query": {
+    "limit": "1.5"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'offset': -1}",
+   "query": {
+    "offset": -1
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'offset': ''}",
+   "query": {
+    "offset": ""
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig {'limit': 5000, 'offset': -1, 'year': 'x'}",
+   "query": {
+    "limit": 5000,
+    "offset": -1,
+    "year": "x"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images?limit=2&limit=4",
+   "name": "gjentatt limit (siste vinner)"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=true",
+   "query": {
+    "include_excluded": "true",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=false",
+   "query": {
+    "include_excluded": "false",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=yes",
+   "query": {
+    "include_excluded": "yes",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=on",
+   "query": {
+    "include_excluded": "on",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=1",
+   "query": {
+    "include_excluded": "1",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=0",
+   "query": {
+    "include_excluded": "0",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=TRUE",
+   "query": {
+    "include_excluded": "TRUE",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=off",
+   "query": {
+    "include_excluded": "off",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=f",
+   "query": {
+    "include_excluded": "f",
+    "limit": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded=''",
+   "query": {
+    "include_excluded": ""
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded='2'",
+   "query": {
+    "include_excluded": "2"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "include_excluded='kanskje'",
+   "query": {
+    "include_excluded": "kanskje"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'year': 2011}",
+   "query": {
+    "year": 2011,
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'year': 2012}",
+   "query": {
+    "year": 2012,
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'year': 1999}",
+   "query": {
+    "year": 1999,
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'year': 1850}",
+   "query": {
+    "year": 1850,
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'year': '2011.0'}",
+   "query": {
+    "year": "2011.0",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'season': 'sommer'}",
+   "query": {
+    "season": "sommer",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'season': 'vår'}",
+   "query": {
+    "season": "vår",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'season': 'høst'}",
+   "query": {
+    "season": "høst",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'season': ''}",
+   "query": {
+    "season": "",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'season': 'ukjent'}",
+   "query": {
+    "season": "ukjent",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'place': 'Bø i Telemark'}",
+   "query": {
+    "place": "Bø i Telemark",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'place': 'Ål'}",
+   "query": {
+    "place": "Ål",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'place': 'Æsøya_100%'}",
+   "query": {
+    "place": "Æsøya_100%",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'place': ''}",
+   "query": {
+    "place": "",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'place': 'bø i telemark'}",
+   "query": {
+    "place": "bø i telemark",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'event': 'ferie'}",
+   "query": {
+    "event": "ferie",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'event': 'jul'}",
+   "query": {
+    "event": "jul",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'event': 'Bursdag'}",
+   "query": {
+    "event": "Bursdag",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'event': 'bursdag'}",
+   "query": {
+    "event": "bursdag",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'event': ''}",
+   "query": {
+    "event": "",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'event': 'skjult-hendelse'}",
+   "query": {
+    "event": "skjult-hendelse",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'indoor_outdoor': 'outdoor'}",
+   "query": {
+    "indoor_outdoor": "outdoor",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'indoor_outdoor': 'indoor'}",
+   "query": {
+    "indoor_outdoor": "indoor",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'indoor_outdoor': 'Outdoor'}",
+   "query": {
+    "indoor_outdoor": "Outdoor",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'indoor_outdoor': ''}",
+   "query": {
+    "indoor_outdoor": "",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'tag': 'strand'}",
+   "query": {
+    "tag": "strand",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'tag': 'Strand'}",
+   "query": {
+    "tag": "Strand",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'tag': 'ørret'}",
+   "query": {
+    "tag": "ørret",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'tag': 'Ål'}",
+   "query": {
+    "tag": "Ål",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'tag': '100%'}",
+   "query": {
+    "tag": "100%",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'tag': 'skjult-tagg'}",
+   "query": {
+    "tag": "skjult-tagg",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'tag': '{tag_job}'}",
+   "query": {
+    "tag": "{tag_job}",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'tag': ''}",
+   "query": {
+    "tag": "",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'person': '{p_ase}'}",
+   "query": {
+    "person": "{p_ase}",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'person': '{p_bjorn}'}",
+   "query": {
+    "person": "{p_bjorn}",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'person': '{p_zorro}'}",
+   "query": {
+    "person": "{p_zorro}",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'person': '{p_uten}'}",
+   "query": {
+    "person": "{p_uten}",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'person': 999999}",
+   "query": {
+    "person": 999999,
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'person': -1}",
+   "query": {
+    "person": -1,
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': 'strand'}",
+   "query": {
+    "q": "strand",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': 'STRAND'}",
+   "query": {
+    "q": "STRAND",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': 'Bø'}",
+   "query": {
+    "q": "Bø",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': 'bø'}",
+   "query": {
+    "q": "bø",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': 'ørret'}",
+   "query": {
+    "q": "ørret",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': 'Ålfjell'}",
+   "query": {
+    "q": "Ålfjell",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': 'ålfjell'}",
+   "query": {
+    "q": "ålfjell",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': '%'}",
+   "query": {
+    "q": "%",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': '_'}",
+   "query": {
+    "q": "_",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': '100%'}",
+   "query": {
+    "q": "100%",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': '«sitater»'}",
+   "query": {
+    "q": "«sitater»",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': ''}",
+   "query": {
+    "q": "",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "filter {'q': 'finnes ikke'}",
+   "query": {
+    "q": "finnes ikke",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig filter {'year': 'abc'}",
+   "query": {
+    "year": "abc"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig filter {'year': ''}",
+   "query": {
+    "year": ""
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig filter {'year': '2011.5'}",
+   "query": {
+    "year": "2011.5"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig filter {'person': 'abc'}",
+   "query": {
+    "person": "abc"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig filter {'person': ''}",
+   "query": {
+    "person": ""
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "ugyldig filter {'year': 'x', 'person': 'y', 'limit': 0}",
+   "query": {
+    "year": "x",
+    "person": "y",
+    "limit": 0
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images?year=2011&year=2012&limit=3",
+   "name": "gjentatt year (siste vinner)"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images?ukjent=1&sort=asc&limit=2",
+   "name": "ukjente parametre ignoreres"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'year': 2011, 'season': 'sommer', 'limit': 5}",
+   "query": {
+    "year": 2011,
+    "season": "sommer",
+    "limit": 5
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'year': 2011, 'season': 'sommer', 'place': 'Bø i Telemark', 'person': '{p_ase}'}",
+   "query": {
+    "year": 2011,
+    "season": "sommer",
+    "place": "Bø i Telemark",
+    "person": "{p_ase}"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'event': 'ferie', 'indoor_outdoor': 'outdoor', 'tag': 'strand'}",
+   "query": {
+    "event": "ferie",
+    "indoor_outdoor": "outdoor",
+    "tag": "strand"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'q': 'strand', 'include_excluded': 'true'}",
+   "query": {
+    "q": "strand",
+    "include_excluded": "true"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'tag': 'skjult-tagg', 'include_excluded': 'true'}",
+   "query": {
+    "tag": "skjult-tagg",
+    "include_excluded": "true"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'event': 'skjult-hendelse', 'include_excluded': 'true'}",
+   "query": {
+    "event": "skjult-hendelse",
+    "include_excluded": "true"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'person': '{p_ase}', 'q': 'Bø', 'offset': 1, 'limit': 2}",
+   "query": {
+    "person": "{p_ase}",
+    "q": "Bø",
+    "offset": 1,
+    "limit": 2
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'season': 'vår', 'include_excluded': 'true', 'limit': 1000}",
+   "query": {
+    "season": "vår",
+    "include_excluded": "true",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'year': 2011, 'season': '', 'place': '', 'event': '', 'indoor_outdoor': '', 'tag': '', 'q': '', 'limit': 4}",
+   "query": {
+    "year": 2011,
+    "season": "",
+    "place": "",
+    "event": "",
+    "indoor_outdoor": "",
+    "tag": "",
+    "q": "",
+    "limit": 4
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'person': '{p_ase}', 'include_excluded': 'true', 'limit': 1000}",
+   "query": {
+    "person": "{p_ase}",
+    "include_excluded": "true",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'q': 'ørret', 'tag': 'Ål', 'event': 'tur', 'indoor_outdoor': 'outdoor', 'season': 'sommer'}",
+   "query": {
+    "q": "ørret",
+    "tag": "Ål",
+    "event": "tur",
+    "indoor_outdoor": "outdoor",
+    "season": "sommer"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "kombinert {'year': 2012, 'season': 'vinter', 'q': 'Oslo', 'include_excluded': '1'}",
+   "query": {
+    "year": 2012,
+    "season": "vinter",
+    "q": "Oslo",
+    "include_excluded": "1"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "alle id-er"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er {'include_excluded': 'true'}",
+   "query": {
+    "include_excluded": "true"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er {'year': 2012}",
+   "query": {
+    "year": 2012
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er {'person': '{p_ase}'}",
+   "query": {
+    "person": "{p_ase}"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er {'q': 'strand', 'include_excluded': 'yes'}",
+   "query": {
+    "q": "strand",
+    "include_excluded": "yes"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er {'tag': 'jul', 'event': 'jul'}",
+   "query": {
+    "tag": "jul",
+    "event": "jul"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er {'season': 'vår', 'place': 'Ål'}",
+   "query": {
+    "season": "vår",
+    "place": "Ål"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er {'limit': 5, 'offset': 3}",
+   "query": {
+    "limit": 5,
+    "offset": 3
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er {'year': 1850}",
+   "query": {
+    "year": 1850
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er ugyldig {'year': 'abc'}",
+   "query": {
+    "year": "abc"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er ugyldig {'include_excluded': 'kanskje'}",
+   "query": {
+    "include_excluded": "kanskje"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er ugyldig {'person': ''}",
+   "query": {
+    "person": ""
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/100",
+   "name": "detalj 100"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/101",
+   "name": "detalj 101"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/102",
+   "name": "detalj 102"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/103",
+   "name": "detalj 103"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/104",
+   "name": "detalj 104"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/105",
+   "name": "detalj 105"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/106",
+   "name": "detalj 106"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/107",
+   "name": "detalj 107"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/3",
+   "name": "detalj 3"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/6",
+   "name": "detalj 6"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/50",
+   "name": "detalj 50"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/51",
+   "name": "detalj 51"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/52",
+   "name": "detalj 52"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/53",
+   "name": "detalj 53"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/60",
+   "name": "detalj 60"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/14",
+   "name": "detalj 14"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/{top}",
+   "name": "detalj {top}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/{img_locked}",
+   "name": "detalj {img_locked}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/{img_noclust}",
+   "name": "detalj {img_noclust}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/{img_noface}",
+   "name": "detalj {img_noface}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/{img_jobtag}",
+   "name": "detalj {img_jobtag}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/1",
+   "name": "detalj 1"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/1.0",
+   "name": "detalj med lax id 1.0"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/+5",
+   "name": "detalj med lax id +5"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/1_0",
+   "name": "detalj med lax id 1_0"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/%2010%20",
+   "name": "detalj med lax id %2010%20"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/999999",
+   "name": "detalj finnes ikke 999999",
+   "expect_status": 404
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/0",
+   "name": "detalj finnes ikke 0",
+   "expect_status": 404
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/-5",
+   "name": "detalj finnes ikke -5",
+   "expect_status": 404
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/abc",
+   "name": "detalj ugyldig id abc",
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/1.5",
+   "name": "detalj ugyldig id 1.5",
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/%20",
+   "name": "detalj ugyldig id %20",
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/1e3",
+   "name": "detalj ugyldig id 1e3",
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/99999999999999999999",
+   "name": "id utenfor i64 (500 i begge)",
+   "expect_status": 500
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/",
+   "name": "skråstrek til slutt",
+   "expect_status": 404
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/1/ekstra",
+   "name": "ukjent understi",
+   "expect_status": 404
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/{top}",
+   "name": "gjeninnsett bildet med flest ansikter",
+   "json": {
+    "excluded": false
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/facets",
+   "name": "fasetter etter gjeninnsetting"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "personfilter etter gjeninnsetting",
+   "query": {
+    "person": "{p_ase}",
+    "limit": 1000
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/{top}",
+   "name": "detalj etter gjeninnsetting"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/100",
+   "name": "ekskluder med \"yes\"",
+   "json": {
+    "excluded": "yes"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/100",
+   "name": "detalj etter ekskludering"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "q=strand etter ekskludering",
+   "query": {
+    "q": "strand"
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/100",
+   "name": "gjeninnsett med 0",
+   "json": {
+    "excluded": 0
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/101",
+   "name": "ekstra felt ignoreres",
+   "json": {
+    "excluded": true,
+    "ukjent": 1
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/101",
+   "name": "samme verdi på nytt",
+   "json": {
+    "excluded": true
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/104",
+   "name": "tall 1.0",
+   "json": {
+    "excluded": 1.0
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/104",
+   "name": "tekst \"off\"",
+   "json": {
+    "excluded": "off"
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH tom kropp {}",
+   "expect_status": 422,
+   "json": {}
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH excluded null",
+   "expect_status": 422,
+   "json": {
+    "excluded": null
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH excluded \"kanskje\"",
+   "expect_status": 422,
+   "json": {
+    "excluded": "kanskje"
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH excluded 2",
+   "expect_status": 422,
+   "json": {
+    "excluded": 2
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH excluded liste",
+   "expect_status": 422,
+   "json": {
+    "excluded": [
+     true
+    ]
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH kropp er en liste",
+   "expect_status": 422,
+   "json": [
+    {
+     "excluded": true
+    }
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH ingen kropp",
+   "expect_status": 422
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH tekst uten JSON-type",
+   "expect_status": 422,
+   "body": "{\"excluded\": true}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/105",
+   "name": "PATCH ugyldig JSON",
+   "expect_status": 422,
+   "body": "{\"excluded\": tru",
+   "headers": {
+    "Content-Type": "application/json"
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/999999",
+   "name": "PATCH finnes ikke",
+   "json": {
+    "excluded": true
+   },
+   "expect_status": 404
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/abc",
+   "name": "PATCH ugyldig id",
+   "json": {
+    "excluded": true
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/abc",
+   "name": "PATCH ugyldig id og kropp",
+   "json": {
+    "excluded": "kanskje"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/ids",
+   "name": "PATCH /images/ids (Starlette: full treff på {image_id})",
+   "json": {
+    "excluded": true
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/ids",
+   "name": "PATCH /images/ids uten kropp",
+   "expect_status": 422
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/ids",
+   "name": "PATCH /images/ids med feil kropp",
+   "json": {
+    "x": 1
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/ids",
+   "name": "PATCH /images/ids med liste",
+   "json": [
+    1
+   ],
+   "expect_status": 422
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/ids",
+   "name": "PATCH /images/ids med ugyldig JSON",
+   "body": "{",
+   "headers": {
+    "Content-Type": "application/json"
+   },
+   "expect_status": 422
+  },
+  {
+   "method": "GET",
+   "path": "/api/images/ids",
+   "name": "id-er etter PATCH",
+   "query": {
+    "include_excluded": "false"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/facets",
+   "name": "fasetter etter PATCH"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/{top}",
+   "name": "ekskluder igjen",
+   "json": {
+    "excluded": true
+   }
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/images/101",
+   "name": "gjeninnsett 101",
+   "json": {
+    "excluded": "false"
+   }
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/images/1",
+   "name": "DELETE /api/images/1",
+   "expect_status": 405
+  },
+  {
+   "method": "PUT",
+   "path": "/api/images/1",
+   "name": "PUT /api/images/1",
+   "expect_status": 405
+  },
+  {
+   "method": "POST",
+   "path": "/api/images",
+   "name": "POST /api/images",
+   "expect_status": 405
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/images",
+   "name": "DELETE /api/images",
+   "expect_status": 405
+  },
+  {
+   "method": "PUT",
+   "path": "/api/images/ids",
+   "name": "PUT /api/images/ids",
+   "expect_status": 405
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/images/ids",
+   "name": "DELETE /api/images/ids",
+   "expect_status": 405
+  },
+  {
+   "method": "POST",
+   "path": "/api/images/ids",
+   "name": "POST /api/images/ids",
+   "expect_status": 405
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/images",
+   "name": "HEAD /api/images",
+   "expect_status": 405
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/images/1",
+   "name": "HEAD /api/images/1",
+   "expect_status": 405
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/images/ids",
+   "name": "HEAD /api/images/ids",
+   "expect_status": 405
+  },
+  {
+   "method": "POST",
+   "path": "/api/facets",
+   "name": "POST /api/facets",
+   "expect_status": 405
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/facets",
+   "name": "HEAD /api/facets",
+   "expect_status": 405
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/images/abc",
+   "name": "DELETE /api/images/abc",
+   "expect_status": 405
+  },
+  {
+   "method": "GET",
+   "path": "/api/facets",
+   "name": "fasetter til slutt"
+  },
+  {
+   "method": "GET",
+   "path": "/api/images",
+   "name": "liste til slutt",
+   "query": {
+    "include_excluded": "true",
+    "limit": 1000
+   }
+  }
+ ]
+}

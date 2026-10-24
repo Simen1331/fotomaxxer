@@ -1,0 +1,235 @@
+name: Rust (Windows + Linux)
+
+# Fase 0 i docs/rust-port-plan.md: bevis at Rust-motoren bygger og kjører på begge
+# plattformer — ONNX Runtime (statisk via ort), libheif (vcpkg på Windows, pkg-config
+# på Linux) og ansiktsdeteksjon på JPEG/PNG/HEIC — uten Python eller ExifTool.
+#
+# Fase 6: web/dist (React-frontenden) bygges med Node før cargo, slik at release-binæren
+# bærer SPA-en (rust-embed i crates/api). Uten web/dist bygger cargo fortsatt, men da
+# serverer `fotomaxxer serve` ingen frontend.
+#
+# Fase 7: Windows-exe-ene lenkes med statisk C-runtime (.cargo/config.toml). libheif
+# bygges derfor med vcpkg-tripletten x64-windows-static, og ONNX Runtime fra kilde med
+# /MT og bare CPU (.github/actions/onnxruntime-static). Installasjonsprogrammet og
+# releasen lages i windows-release.yml.
+#
+# Fase 7A: desktop-modus (tao + wry). Linux trenger WebKitGTK 4.1 og GTK 3 for å bygge og
+# xvfb for røyktesten med det ekte vinduet; windows-2022 har WebView2.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust-verktøykjede
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+
+      - name: Node (frontend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Bygg web/dist
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: libheif, WebKitGTK og xvfb (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libheif-dev libheif-plugin-libde265 \
+            libwebkit2gtk-4.1-dev libgtk-3-dev xvfb
+
+      - name: vcpkg-cache (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}\vcpkg-archives
+          key: vcpkg-libheif-de265-x64-windows-static-v1
+
+      # Bare dekoding (libde265), uten den GPL-lisensierte x265-koderen; se skriptet.
+      - name: libheif via vcpkg (Windows, statisk)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VCPKG_BINARY_SOURCES: clear;files,${{ runner.temp }}\vcpkg-archives,readwrite
+        run: |
+          New-Item -ItemType Directory -Force "${{ runner.temp }}\vcpkg-archives" | Out-Null
+          & packaging\windows\install-libheif.ps1
+
+      - name: ONNX Runtime (Windows, statisk CRT, bare CPU)
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/onnxruntime-static
+      # «crt-static» i nøkkelen: target fra før fase 7B (dynamisk CRT, pykes ORT med
+      # DirectML.dll) skal ikke gjenbrukes.
+
+      - name: Cargo-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ matrix.os }}-crt-static-${{ hashFiles('Cargo.lock') }}
+
+      - name: Tester
+        run: cargo test --workspace --release --no-fail-fast
+
+      - name: serve-røyktest (SPA + API fra binæren)
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          cargo build --release -p fotomaxxer
+          pakke="$RUNNER_TEMP/serve-pakke"
+          logg="$RUNNER_TEMP/serve.log"
+          mkdir -p "$pakke"
+          # Utskriften går til fil, så bakgrunnsprosessen ikke holder stegets rør åpent.
+          ./target/release/fotomaxxer --home "$pakke" serve --port 18080 > "$logg" 2>&1 &
+          pid=$!
+          # Ved feil underveis: ikke la tjeneren bli stående (opprydding, ikke en del av testen).
+          rydd() {
+            if [ "$RUNNER_OS" = "Windows" ]; then taskkill //F //IM fotomaxxer.exe > /dev/null 2>&1 || true
+            else kill "$pid" 2> /dev/null || true; fi
+          }
+          trap rydd EXIT
+          base=http://127.0.0.1:18080
+          oppe=
+          for i in $(seq 1 150); do
+            if curl -sf "$base/api/health" > /dev/null; then oppe=1; break; fi
+            sleep 0.2
+          done
+          if [ -z "$oppe" ]; then echo "serve svarte ikke på /api/health"; cat "$logg"; exit 1; fi
+
+          # sjekk <status> <tekst i kroppen | -> <curl-argumenter …>. Kroppen leses helt før
+          # grep (ingen rør med grep -q, som kan gi SIGPIPE i curl under pipefail).
+          sjekk() {
+            local want=$1 pat=$2 out code
+            shift 2
+            out=$(curl -s -w '\n%{http_code}' "$@")
+            code=${out##*$'\n'}
+            out=${out%$'\n'*}
+            if [ "$code" != "$want" ] || { [ "$pat" != - ] && ! grep -qF -- "$pat" <<< "$out"; }; then
+              echo "FEIL: curl $* ga $code (ventet $want og «$pat»):"
+              printf '%s\n' "${out:0:800}"
+              cat "$logg"
+              exit 1
+            fi
+            echo "ok $code: $*"
+          }
+          js=$(cd web/dist/assets && ls *.js | head -1)
+          sjekk 200 '<div id="root">' "$base/"
+          sjekk 200 '<div id="root">' "$base/people/3"
+          sjekk 200 - "$base/assets/$js"
+          sjekk 200 '{"status":"ok"}' "$base/api/health"
+          sjekk 200 '"openrouter_api_key":"(ikke satt)"' "$base/api/settings"
+          sjekk 200 '"images_total":0' "$base/api/progress"
+          sjekk 200 '"entries":[' "$base/api/fs/list"
+          sjekk 200 '"name":"Royktest","item_count":0' -X POST -H 'Content-Type: application/json' -d '{"name":"  Royktest "}' "$base/api/albums"
+          sjekk 200 '"name":"Royktest"' "$base/api/albums"
+          sjekk 422 '"type":"missing"' -X POST -H 'Content-Type: application/json' -d '{}' "$base/api/albums"
+          # Med SPA gir GET på en sti som bare har andre metoder 404 som i FastAPI, ikke 405.
+          sjekk 404 'ukjent endepunkt' "$base/api/jobs/update"
+          sjekk 405 'Method Not Allowed' -X PUT "$base/api/jobs/update"
+          sjekk 202 '"kind":"faces-cluster"' -X POST -H 'Content-Type: application/json' -d '{}' "$base/api/jobs/faces-cluster"
+          for i in $(seq 1 100); do
+            if curl -sf "$base/api/jobs/current" | grep -qF '"running":false'; then break; fi
+            sleep 0.2
+          done
+          sjekk 200 '"running":false' "$base/api/jobs/current"
+          head -1 "$logg" | grep -F "FotoMaxxer GUI" | grep -qF "http://127.0.0.1:18080"
+
+          # Avslutning: SIGTERM skal gi ren avslutning (kode 0) på Linux. Git Bash kan ikke
+          # sende signaler til en Windows-prosess, så der avsluttes den med taskkill.
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            taskkill //F //IM fotomaxxer.exe
+          else
+            kill -TERM "$pid"
+          fi
+          status=0
+          wait "$pid" || status=$?
+          echo "serve avsluttet med kode $status"
+          if [ "$RUNNER_OS" != "Windows" ] && [ "$status" != 0 ]; then cat "$logg"; exit 1; fi
+          test -s "$pakke/fotomaxxer.db"
+
+      - name: Hent ansiktsmodeller (det_10g + w600k_r50)
+        shell: bash
+        run: |
+          curl -sSL "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip" -o buffalo_l.zip
+          mkdir -p models && unzip -j -o buffalo_l.zip "*det_10g.onnx" "*w600k_r50.onnx" -d models
+          ls -la models
+
+      - name: Røyktest (dekoding + ansikter)
+        shell: bash
+        run: |
+          cargo run --release -p fotomaxxer-core --example smoke -- models \
+            tests/fixtures/astronaut.png tests/fixtures/astronaut.jpg tests/fixtures/astronaut.heic
+
+      - name: Desktop-røyktest (ekte vindu, sesjon, én instans, jobb og avbrudd)
+        shell: bash
+        timeout-minutes: 6
+        env:
+          FOTOMAXXER_MODELS: ${{ github.workspace }}/models
+          # WebKitGTK under xvfb: ingen DMA-BUF/GPU.
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          rapport="$RUNNER_TEMP/desktop-smoke"
+          echo "DESKTOP_SMOKE=$rapport" >> "$GITHUB_ENV"
+          status=0
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run -a -s "-screen 0 1600x1000x24" ./target/release/fotomaxxer-gui \
+              --smoke "$rapport" --smoke-image tests/fixtures/astronaut.jpg || status=$?
+          else
+            ./target/release/fotomaxxer-gui.exe \
+              --smoke "$rapport" --smoke-image tests/fixtures/astronaut.jpg || status=$?
+          fi
+          echo "fotomaxxer-gui --smoke avsluttet med kode $status"
+          cat "$rapport/desktop-report.json" || true
+          # Loggen viser tidslinjen (også når alt er ok).
+          tail -60 "$rapport/library/logs/desktop.log" || true
+          exit "$status"
+
+      - name: Last opp desktop-rapport og logg ved feil
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-smoke-${{ matrix.os }}
+          path: |
+            ${{ env.DESKTOP_SMOKE }}/desktop-report.json
+            ${{ env.DESKTOP_SMOKE }}/library/logs/
+          if-no-files-found: ignore
+
+      - name: Binærstørrelse og dynamiske avhengigheter
+        shell: bash
+        run: |
+          ls -la target/release/examples/ | grep -i smoke
+          ls -la target/release/ | grep -E ' fotomaxxer(-gui)?(\.exe)?$'
+          if [ "$RUNNER_OS" = "Linux" ]; then ldd target/release/examples/smoke; fi
+
+      # Fase 7: exe-ene skal bare trenge systemets DLL-er (ingen VCRUNTIME140/MSVCP140,
+      # onnxruntime.dll eller DirectML.dll).
+      - name: Bare systemets DLL-er (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exes = @('target\release\fotomaxxer.exe', 'target\release\fotomaxxer-gui.exe', 'target\release\examples\smoke.exe')
+          & packaging\windows\check-dependents.ps1 @exes
+          $dll = Get-ChildItem target\release -Filter *.dll -ErrorAction SilentlyContinue
+          if ($dll) { $dll | Format-Table Name, Length; throw 'DLL-er i target\release (ventet ingen)' }

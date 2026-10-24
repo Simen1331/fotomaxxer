@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- FotoMaxxer-ikon: et fotografi (ravgul ramme, sol og fjell) på varm koksgrå.
+       Farger fra web/src/theme.css. fotomaxxer.ico lages av denne fila
+       (se packaging/windows/README.md). -->
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="#14110e"/>
+  <rect x="44" y="60" width="168" height="136" rx="18" fill="#201b16" stroke="#e0a96b" stroke-width="14"/>
+  <circle cx="160" cy="102" r="16" fill="#f0c489"/>
+  <path d="M58 182 L104 126 L136 160 L156 140 L198 182 Z" fill="#e0a96b"/>
+</svg>

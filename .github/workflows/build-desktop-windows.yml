@@ -1,0 +1,92 @@
+name: Build Desktop Windows (Qt)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer Python-avhengigheter
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[desktop]" scikit-image
+          python -m pip install -r packaging/requirements-build.txt
+
+      - name: Hent ExifTool (komplett mappe)
+        shell: pwsh
+        run: |
+          curl.exe -L "https://sourceforge.net/projects/exiftool/files/exiftool-13.59_64.zip/download" -o exiftool.zip --max-redirs 20
+          Expand-Archive exiftool.zip -DestinationPath exiftool-tmp
+          $root = Get-ChildItem exiftool-tmp -Directory | Select-Object -First 1
+          New-Item -ItemType Directory exiftool | Out-Null
+          Copy-Item (Join-Path $root.FullName "exiftool(-k).exe") exiftool\exiftool.exe
+          Copy-Item (Join-Path $root.FullName "exiftool_files") exiftool\exiftool_files -Recurse
+          & exiftool\exiftool.exe -ver
+
+      - name: Hent ansiktsmodeller (buffalo_l)
+        shell: pwsh
+        run: |
+          curl.exe -L "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip" -o buffalo_l.zip --max-redirs 20
+          New-Item -ItemType Directory buffalo_l | Out-Null
+          Expand-Archive buffalo_l.zip -DestinationPath buffalo_l-tmp
+          Get-ChildItem buffalo_l-tmp -Recurse -Filter *.onnx | Copy-Item -Destination buffalo_l
+          Get-ChildItem buffalo_l
+
+      - name: Bygg pakke
+        shell: pwsh
+        run: |
+          python scripts/build-desktop-probe.py --models "$env:GITHUB_WORKSPACE\buffalo_l" --exiftool "$env:GITHUB_WORKSPACE\exiftool"
+
+      - name: Verifiser pakke (pipeline, API, Qt-vindu)
+        shell: pwsh
+        run: |
+          $img = python -c "import skimage.data, pathlib; print(pathlib.Path(skimage.data.__file__).parent / 'astronaut.png')"
+          python scripts/verify-desktop-probe.py --bundle dist\FotoMaxxer --face-image "$img" --output "$env:RUNNER_TEMP\fmx-verify" --desktop
+
+      - name: Vis loggene
+        if: always()
+        shell: pwsh
+        run: |
+          foreach ($f in 'server.log','desktop.log') {
+            $p = Join-Path $env:RUNNER_TEMP "fmx-verify\$f"
+            if (Test-Path $p) { Write-Host "=== $f ==="; Get-Content $p -Tail 60 -Encoding utf8 }
+          }
+          $r = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'fmx-verify') -Recurse -Filter report.json | Select-Object -First 1
+          if ($r) { Write-Host "=== $($r.FullName) ==="; Get-Content $r.FullName -Raw -Encoding utf8 }
+
+      - name: Last opp testrapporter
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FotoMaxxer-windows-verify-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/fmx-verify/**/*.log
+            ${{ runner.temp }}/fmx-verify/**/*.json
+            ${{ runner.temp }}/fmx-verify/**/*.png
+            !${{ runner.temp }}/fmx-verify/FotoMaxxer med */**
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Pakk ZIP
+        shell: pwsh
+        run: Compress-Archive -Path dist\FotoMaxxer -DestinationPath FotoMaxxer-desktop-windows.zip -CompressionLevel Fastest
+
+      - name: Last opp pakke
+        uses: actions/upload-artifact@v4
+        with:
+          name: FotoMaxxer-desktop-windows-${{ github.run_id }}
+          path: FotoMaxxer-desktop-windows.zip
+          retention-days: 14

@@ -1,0 +1,19 @@
+{
+  "beskrivelse": "Eldre datamappe (kopi av ~/dev/fotomaxxer-data, skjema v2): første forespørsel migrerer til v5 — også når den feiler validering (som Depends(get_conn) i FastAPI) — og så leses alt som før",
+  "seed_dir": "~/dev/fotomaxxer-data",
+  "steps": [
+    {"name": "json_invalid åpner ikke databasen", "method": "POST", "path": "/api/sources", "body": "{", "headers": {"Content-Type": "application/json"}},
+    {"name": "422 migrerer likevel (get_conn kjører først)", "method": "POST", "path": "/api/sources", "json": {}},
+    {"method": "GET", "path": "/api/settings"},
+    {"method": "GET", "path": "/api/sources"},
+    {"method": "GET", "path": "/api/profiles"},
+    {"method": "GET", "path": "/api/progress"},
+    {"method": "GET", "path": "/api/progress", "query": {"source_id": 1}},
+    {"method": "GET", "path": "/api/cost"},
+    {"var": "hash1", "sql": "SELECT content_hash FROM images ORDER BY id LIMIT 1"},
+    {"name": "thumbnail fra gammel pakke", "method": "GET", "path": "/derived/{hash1}_300.jpg", "headers_compare": ["etag", "last-modified"]},
+    {"name": "klynging på gamle ansikter", "method": "POST", "path": "/api/jobs/faces-cluster", "json": {}, "wait": true},
+    {"method": "GET", "path": "/api/jobs/current"},
+    {"method": "GET", "path": "/api/progress"}
+  ]
+}

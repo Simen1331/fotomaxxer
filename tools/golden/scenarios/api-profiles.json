@@ -1,0 +1,27 @@
+{
+  "beskrivelse": "Tagging-profiler: opprett (normalisering, duplikat, tomt navn), list i navnerekkefølge, rediger, slett med opprydding av kilder og default_profile_id",
+  "steps": [
+    {"method": "GET", "path": "/api/profiles"},
+    {"name": "opprett med normalisering", "method": "POST", "path": "/api/profiles", "json": {"name": "  Ølbrygging  ", "focus": "  ", "categories": ["humle", " malt ", "humle", "", "Æble"]}, "expect_status": 201},
+    {"name": "opprett minimal", "method": "POST", "path": "/api/profiles", "json": {"name": "Arkitektur"}},
+    {"name": "opprett med fokus", "method": "POST", "path": "/api/profiles", "json": {"name": "Design & håndverk", "focus": "Materialer «og» teknikk", "categories": ["materiale", "teknikk"]}},
+    {"name": "duplikat navn", "method": "POST", "path": "/api/profiles", "json": {"name": "Arkitektur"}},
+    {"name": "duplikat etter trim", "method": "POST", "path": "/api/profiles", "json": {"name": " Arkitektur "}},
+    {"name": "tomt navn", "method": "POST", "path": "/api/profiles", "json": {"name": "   "}},
+    {"name": "focus null", "method": "POST", "path": "/api/profiles", "json": {"name": "Natur", "focus": null, "categories": []}},
+    {"name": "list (sortert på navn)", "method": "GET", "path": "/api/profiles"},
+    {"name": "rediger", "method": "PUT", "path": "/api/profiles/2", "json": {"name": "Arkitektur og by", "focus": "fasader", "categories": ["fasade", "fasade"]}},
+    {"name": "rediger til eksisterende navn", "method": "PUT", "path": "/api/profiles/2", "json": {"name": "Natur"}},
+    {"name": "rediger ukjent (400)", "method": "PUT", "path": "/api/profiles/99", "json": {"name": "X"}},
+    {"name": "rediger med tomt navn", "method": "PUT", "path": "/api/profiles/2", "json": {"name": ""}},
+    {"name": "rediger uten navn (422)", "method": "PUT", "path": "/api/profiles/2", "json": {"focus": "x"}},
+    {"name": "kilde med profil 2", "method": "POST", "path": "/api/sources", "json": {"path": "{home}/Bilder", "profile_id": 2}},
+    {"name": "global standard = 2", "method": "PUT", "path": "/api/settings/default_profile_id", "json": {"value": "2"}},
+    {"name": "slett 2", "method": "DELETE", "path": "/api/profiles/2", "json": {}},
+    {"name": "kilden mistet profilen", "method": "GET", "path": "/api/sources"},
+    {"name": "standarden er fjernet", "method": "GET", "path": "/api/settings"},
+    {"name": "slett igjen (404)", "method": "DELETE", "path": "/api/profiles/2"},
+    {"name": "slett med tekst-id (422)", "method": "DELETE", "path": "/api/profiles/to"},
+    {"method": "GET", "path": "/api/profiles"}
+  ]
+}

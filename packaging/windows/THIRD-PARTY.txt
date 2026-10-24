@@ -1,0 +1,23 @@
+Tredjepartskomponenter i FotoMaxxer for Windows
+===============================================
+
+ONNX Runtime (Microsoft) – MIT-lisens. Lenket statisk inn i exe-filene.
+  Lisens: onnxruntime-LICENSE.txt, merknader: onnxruntime-ThirdPartyNotices.txt.
+
+libheif, libde265 (HEIC-dekoding) – LGPL-3.0. Lenket statisk inn via vcpkg.
+  https://github.com/strukturag/libheif  https://github.com/strukturag/libde265
+  Kildekoden og byggeskriptene til FotoMaxxer (packaging/windows/) ligger på
+  https://github.com/Simen1331/fotomaxxer, så exe-filene kan bygges på nytt med
+  en annen versjon av bibliotekene.
+
+Fraunces, Hanken Grotesk, Spline Sans Mono (fonter i brukergrensesnittet) –
+  SIL Open Font License 1.1. Se FONT-LICENSES.txt.
+
+FotoMaxxer selv er under MIT-lisens. Se FotoMaxxer-LICENSE.txt.
+
+Ansiktsmodellene models\det_10g.onnx og models\w600k_r50.onnx er fra InsightFace
+  (buffalo_l, https://github.com/deepinsight/insightface). InsightFace oppgir at de
+  forhåndstrente modellene bare er til ikke-kommersiell forskningsbruk.
+
+Rust-bibliotekene som er kompilert inn, er under MIT-, Apache-2.0- eller tilsvarende
+  tillatende lisenser (se Cargo.lock i kildekoden).

@@ -1,0 +1,43 @@
+[package]
+name = "fotomaxxer"
+description = "Lokal-først, bærbar foto-kuratering for trykte album"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "fotomaxxer_app"
+path = "src/lib.rs"
+
+# Konsoll-CLI-en (`FotoMaxxer-cli.exe` i Windows-pakka), med underkommandoen `desktop`.
+[[bin]]
+name = "fotomaxxer"
+path = "src/main.rs"
+
+# Desktop-appen uten konsollvindu på Windows (`FotoMaxxer.exe` i Windows-pakka).
+[[bin]]
+name = "fotomaxxer-gui"
+path = "src/gui.rs"
+
+[dependencies]
+clap.workspace = true
+fotomaxxer-api = { path = "../api" }
+fotomaxxer-core = { path = "../core" }
+getrandom = "0.4"
+rusqlite.workspace = true
+serde_json.workspace = true
+tao = "0.37"
+tokio = { version = "1", features = ["rt-multi-thread", "net", "time", "sync", "signal"] }
+wry = { version = "0.57", default-features = false, features = ["os-webview"] }
+
+# Dialoger: GTK direkte på Linux (samme GTK-tråd som tao; rfd ville startet sin egen),
+# rfd (MessageBoxW) på Windows.
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+
+[target.'cfg(windows)'.dependencies]
+rfd = { version = "0.17", default-features = false }
+
+[dev-dependencies]
+tempfile.workspace = true

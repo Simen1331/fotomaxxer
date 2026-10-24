@@ -1,0 +1,23 @@
+{
+  "beskrivelse": "Filsystem-browse (/api/fs/list): hjemmemappe, undermapper, skjulte, symlenker, sortering, ~, relativ sti, rot, fil, mangler, ingen tilgang",
+  "skip_db": true,
+  "steps": [
+    {"name": "hjemmemappa", "method": "GET", "path": "/api/fs/list"},
+    {"name": "tom sti = hjemmemappa", "method": "GET", "path": "/api/fs/list?path="},
+    {"name": "undermappe", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/Bilder"}},
+    {"name": "æøå prosentkodet", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/Æbler"}},
+    {"name": "skråstrek til slutt", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/Bilder/"}},
+    {"name": "..", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/Bilder/.."}},
+    {"name": "~", "method": "GET", "path": "/api/fs/list", "query": {"path": "~"}},
+    {"name": "~/Bilder", "method": "GET", "path": "/api/fs/list", "query": {"path": "~/Bilder"}},
+    {"name": "symlenke til mappe", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/lenke-til-mappe"}},
+    {"name": "relativ sti (mot cwd)", "method": "GET", "path": "/api/fs/list", "query": {"path": "."}},
+    {"name": "rota", "method": "GET", "path": "/api/fs/list", "query": {"path": "/"}},
+    {"name": "fil", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/fil.txt"}},
+    {"name": "finnes ikke", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/finnes ikke"}},
+    {"name": "brutt lenke", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/brutt-lenke"}},
+    {"name": "ingen tilgang", "method": "GET", "path": "/api/fs/list", "query": {"path": "{home}/låst"}},
+    {"name": "biblioteket", "method": "GET", "path": "/api/fs/list", "query": {"path": "{lib}/a"}},
+    {"name": "POST gir 405", "method": "POST", "path": "/api/fs/list"}
+  ]
+}

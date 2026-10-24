@@ -1,0 +1,256 @@
+{
+  "isolated_linux": true,
+  "checks": [
+    {
+      "ok": true,
+      "label": "Executable starter fra flyttet mappe uten utviklings-PATH"
+    },
+    {
+      "ok": true,
+      "label": "Pakket scan/derive/ansikter/klynging avslutter uten feil"
+    },
+    {
+      "ok": true,
+      "label": "Røykprøven bekrefter frosset runtime"
+    },
+    {
+      "ok": true,
+      "label": "Pakket FastAPI helsesjekk"
+    },
+    {
+      "ok": true,
+      "label": "Pakket React og JavaScript lastes"
+    },
+    {
+      "ok": true,
+      "label": "SPA-ruting fra direkte URL"
+    },
+    {
+      "ok": true,
+      "label": "Thumbnail-servering fra valgt datamappe"
+    },
+    {
+      "ok": true,
+      "label": "API-tjeneren avslutter kontrollert"
+    }
+  ],
+  "version_start_seconds": 0.398,
+  "pipeline": {
+    "frozen": true,
+    "python": "3.14.7",
+    "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+    "face_fixture_sha256": "88431cd9653ccd539741b555fb0a46b61558b301d4110412b5bc28b5e3ea6cb5",
+    "checks": [
+      {
+        "ok": true,
+        "label": "Pakkede ressursers sjekksummer"
+      },
+      {
+        "ok": true,
+        "label": "Scan og deduplisering"
+      },
+      {
+        "ok": true,
+        "label": "Idempotent scan med stat-cache"
+      },
+      {
+        "ok": true,
+        "label": "EXIF fra pakket ExifTool"
+      },
+      {
+        "ok": true,
+        "label": "Prosesspool: JPEG, PNG, HEIC/HEIF og isolert korrupt fil"
+      },
+      {
+        "ok": true,
+        "label": "Thumbnail-størrelser og EXIF-rotasjon"
+      },
+      {
+        "ok": true,
+        "label": "Idempotent derive"
+      },
+      {
+        "ok": true,
+        "label": "Offline InsightFace/ONNX/OpenCV i arbeidsprosesser"
+      },
+      {
+        "ok": true,
+        "label": "Ansikt funnet i alle fire testportretter"
+      },
+      {
+        "ok": true,
+        "label": "512-dimensjonale normaliserte embeddings"
+      },
+      {
+        "ok": true,
+        "label": "scikit-learn HDBSCAN på detekterte ansikter"
+      },
+      {
+        "ok": true,
+        "label": "Idempotent ansiktsdeteksjon"
+      },
+      {
+        "ok": true,
+        "label": "Originalfiler er uendret"
+      },
+      {
+        "ok": true,
+        "label": "SQLite-integritet"
+      }
+    ],
+    "stages": {
+      "scan": {
+        "seen": 10,
+        "skipped_ext": 0,
+        "hashed": 10,
+        "fast_path": 0,
+        "new_images": 9,
+        "duplicates": 1,
+        "files": 10,
+        "errors": 0,
+        "skipped_ext_types": {}
+      },
+      "derive": {
+        "pending": 9,
+        "done": 8,
+        "errors": 1
+      },
+      "detect": {
+        "pending": 8,
+        "done": 8,
+        "errors": 0,
+        "faces_found": 4
+      },
+      "cluster": {
+        "faces_total": 4,
+        "assigned_incremental": 0,
+        "new_clusters": 0,
+        "clusters_total": 0,
+        "unassigned": 4,
+        "names_remapped": 0,
+        "full": false
+      }
+    },
+    "build": {
+      "format": 1,
+      "purpose": "internal-packaging-experiment",
+      "platform": "Linux-7.2.5-3-omarchy-x86_64-with-glibc2.44",
+      "machine": "x86_64",
+      "python": "3.14.7",
+      "exiftool": {
+        "version": "13.55",
+        "perl": {
+          "archlib": "/usr/lib/perl5/5.42/core_perl",
+          "archname": "x86_64-linux-thread-multi",
+          "version": "5.42.2",
+          "privlib": "/usr/share/perl5/core_perl",
+          "vendorlib": "/usr/share/perl5/vendor_perl"
+        }
+      },
+      "model": {
+        "name": "buffalo_l",
+        "files": [
+          "1k3d68.onnx",
+          "2d106det.onnx",
+          "det_10g.onnx",
+          "genderage.onnx",
+          "w600k_r50.onnx"
+        ]
+      },
+      "dependencies": {
+        "ImageIO": "2.37.3",
+        "PyExifTool": "0.5.6",
+        "PyYAML": "6.0.3",
+        "altgraph": "0.17.5",
+        "annotated-doc": "0.0.4",
+        "annotated-types": "0.7.0",
+        "anyio": "4.14.0",
+        "certifi": "2026.6.17",
+        "charset-normalizer": "3.4.7",
+        "click": "8.4.1",
+        "fastapi": "0.137.1",
+        "flatbuffers": "25.12.19",
+        "fotomaxxer": "0.1.0",
+        "h11": "0.16.0",
+        "httptools": "0.8.0",
+        "idna": "3.18",
+        "insightface": "1.0.1",
+        "joblib": "1.5.3",
+        "lazy-loader": "0.5",
+        "ml_dtypes": "0.5.4",
+        "narwhals": "2.22.1",
+        "networkx": "3.6.1",
+        "numpy": "2.4.6",
+        "onnx": "1.22.0",
+        "onnxruntime": "1.27.0",
+        "opencv-python": "4.13.0.92",
+        "packaging": "26.2",
+        "pillow": "12.2.0",
+        "pillow_heif": "1.4.0",
+        "pip": "26.1.2",
+        "protobuf": "7.35.1",
+        "pydantic": "2.13.4",
+        "pydantic_core": "2.46.4",
+        "pyinstaller": "6.22.0",
+        "pyinstaller-hooks-contrib": "2026.8",
+        "python-dotenv": "1.2.2",
+        "python-multipart": "0.0.32",
+        "requests": "2.34.2",
+        "scikit-image": "0.26.0",
+        "scikit-learn": "1.9.0",
+        "scipy": "1.17.1",
+        "setuptools": "84.0.0",
+        "starlette": "1.3.1",
+        "threadpoolctl": "3.6.0",
+        "tifffile": "2026.6.1",
+        "tqdm": "4.68.3",
+        "typing-inspection": "0.4.2",
+        "typing_extensions": "4.15.0",
+        "urllib3": "2.7.0",
+        "uvicorn": "0.49.0",
+        "uvloop": "0.22.1",
+        "watchfiles": "1.2.0",
+        "websockets": "16.0"
+      },
+      "frontend_lock_sha256": "130fcca968a3b741aceb7001e4cf5bba154a5b0e960a20de0c39682b000d86af"
+    },
+    "exiftool_version": "13.55",
+    "seconds": 8.25,
+    "ok": true
+  },
+  "api_health_seconds": 0.86,
+  "bundle_bytes": 1001132764,
+  "largest_child_peak_rss_kib": 915888,
+  "ok": true,
+  "date": "2026-10-07",
+  "executable_sha256": "3a6ef70a62ec881c4dfd095fdc8806461dd7393561491401d4fbf52bad510452",
+  "resource_manifest_sha256": "685d36df708945ee6aae9f30a8177d38f7033ac425859f2aa06020ad81902d94",
+  "model_sha256": {
+    "insightface/models/buffalo_l/1k3d68.onnx": "df5c06b8a0c12e422b2ed8947b8869faa4105387f199c477af038aa01f9a45cc",
+    "insightface/models/buffalo_l/2d106det.onnx": "f001b856447c413801ef5c42091ed0cd516fcd21f2d6b79635b1e733a7109dbf",
+    "insightface/models/buffalo_l/det_10g.onnx": "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
+    "insightface/models/buffalo_l/genderage.onnx": "4fde69b1c810857b88c64a335084f1c3fe8f01246c9a191b48c7bb756d6652fb",
+    "insightface/models/buffalo_l/w600k_r50.onnx": "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43"
+  },
+  "regression_checks": {
+    "storage": {
+      "passed": 18,
+      "total": 18
+    },
+    "handoff_e2e": {
+      "passed": 39,
+      "total": 39
+    },
+    "packaging_resources": {
+      "passed": 5,
+      "total": 5
+    }
+  },
+  "limits": [
+    "Linux Arch/Omarchy x86-64 only; Ubuntu and Windows not tested.",
+    "System native libraries remain visible in the Linux namespace.",
+    "HDBSCAN ran on four real embeddings but produced no person clusters.",
+    "Peak RSS is the largest child process, not total simultaneous process-tree memory.",
+    "Qt desktop window and job cancellation are not implemented in this experiment."
+  ]
+}

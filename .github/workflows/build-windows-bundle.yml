@@ -1,0 +1,41 @@
+name: Build Windows Bundle
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Download ExifTool
+        shell: pwsh
+        run: |
+          curl.exe -L "https://sourceforge.net/projects/exiftool/files/exiftool-13.59_64.zip/download" -o exiftool.zip --max-redirs 20
+          Expand-Archive exiftool.zip -DestinationPath exiftool-tmp
+          $exe = Get-ChildItem exiftool-tmp -Recurse -Filter "exiftool(-k).exe" | Select-Object -First 1
+          Copy-Item $exe.FullName exiftool.exe
+
+      - name: Build bundle
+        shell: pwsh
+        run: |
+          scripts\build-windows-bundle.ps1 -ExiftoolPath "${{ github.workspace }}\exiftool.exe"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FotoMaxxer-windows-${{ github.run_id }}
+          path: FotoMaxxer-*.zip
+          retention-days: 30

@@ -1,0 +1,369 @@
+{
+ "beskrivelse": "Jobber på en kopi av py-golden (926 bilder, derive og ansikter ferdig, 8 bilder ai-pending med blandede svarvarianter): «Oppdater alt» med og uten nøkkel, tag mot fake_openrouter, klynging (inkrementell og full), no-op-steg, skann, ugyldige workers, progress/cost, /derived med ETag",
+ "seed_dir": "~/dev/fotomaxxer-testlib/py-golden",
+ "prep_sql": "UPDATE processing_state SET status = 'done' WHERE stage = 'ai' AND image_id NOT IN (1, 4, 5, 7, 8, 10, 15, 29);",
+ "fake_openrouter": true,
+ "steps": [
+  {
+   "name": "jobbstatus før første jobb",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress",
+   "query": {
+    "source_id": 1
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress",
+   "query": {
+    "source_id": 2
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/cost"
+  },
+  {
+   "method": "GET",
+   "path": "/api/sources"
+  },
+  {
+   "var": "hash1",
+   "sql": "SELECT content_hash FROM images ORDER BY id LIMIT 1"
+  },
+  {
+   "name": "thumbnail 300",
+   "method": "GET",
+   "path": "/derived/{hash1}_300.jpg",
+   "headers_compare": [
+    "etag",
+    "last-modified"
+   ]
+  },
+  {
+   "name": "thumbnail 1024 HEAD",
+   "method": "HEAD",
+   "path": "/derived/{hash1}_1024.jpg",
+   "headers_compare": [
+    "etag",
+    "last-modified"
+   ]
+  },
+  {
+   "name": "thumbnail 304 på ETag",
+   "method": "GET",
+   "path": "/derived/{hash1}_1024.jpg",
+   "headers": {
+    "If-None-Match": "{etag}"
+   },
+   "headers_compare": [
+    "etag"
+   ],
+   "expect_status": 304
+  },
+  {
+   "name": "thumbnail prosentkodet",
+   "method": "GET",
+   "path": "/derived/{hash1}%5F300.jpg",
+   "headers_compare": [
+    "etag"
+   ],
+   "expect_status": 200
+  },
+  {
+   "name": "oppdater alt uten nøkkel",
+   "method": "POST",
+   "path": "/api/jobs/update",
+   "json": {},
+   "expect_status": 202,
+   "wait": true
+  },
+  {
+   "name": "jobbstatus: hoppet over AI",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  },
+  {
+   "name": "tag uten nøkkel feiler",
+   "method": "POST",
+   "path": "/api/jobs/tag",
+   "json": {
+    "workers": 1
+   },
+   "wait": true
+  },
+  {
+   "name": "jobbstatus: TaggingError",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/settings/openrouter_api_key",
+   "json": {
+    "value": "sk-or-v1-falsk-0123456789"
+   }
+  },
+  {
+   "method": "PUT",
+   "path": "/api/settings/ai_model",
+   "json": {
+    "value": "test/fake-vision"
+   }
+  },
+  {
+   "name": "profil med kategorier",
+   "method": "POST",
+   "path": "/api/profiles",
+   "json": {
+    "name": "Hytteliv",
+    "focus": "Båter og brygger",
+    "categories": [
+     "sted",
+     "aktivitet"
+    ]
+   }
+  },
+  {
+   "name": "profilen som standard",
+   "method": "PUT",
+   "path": "/api/settings/default_profile_id",
+   "json": {
+    "value": "1"
+   }
+  },
+  {
+   "name": "tag 3 bilder",
+   "method": "POST",
+   "path": "/api/jobs/tag",
+   "json": {
+    "workers": 1,
+    "limit": 3
+   },
+   "wait": true
+  },
+  {
+   "name": "jobbstatus etter tag",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "kost etter tag",
+   "method": "GET",
+   "path": "/api/cost"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cost",
+   "query": {
+    "source_id": 1
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  },
+  {
+   "name": "tag 4 bilder til",
+   "method": "POST",
+   "path": "/api/jobs/tag",
+   "json": {
+    "workers": 1,
+    "limit": 4
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cost"
+  },
+  {
+   "name": "oppdater alt med nøkkel (1 bilde igjen)",
+   "method": "POST",
+   "path": "/api/jobs/update",
+   "json": {
+    "all": true
+   },
+   "wait": true
+  },
+  {
+   "name": "jobbstatus: biblioteket oppdatert",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cost"
+  },
+  {
+   "name": "full klynging",
+   "method": "POST",
+   "path": "/api/jobs/faces-cluster",
+   "json": {
+    "full": true
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  },
+  {
+   "name": "inkrementell klynging",
+   "method": "POST",
+   "path": "/api/jobs/faces-cluster",
+   "json": {},
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "derive uten arbeid",
+   "method": "POST",
+   "path": "/api/jobs/derive",
+   "json": {},
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "derive workers=0 uten arbeid",
+   "method": "POST",
+   "path": "/api/jobs/derive",
+   "json": {
+    "workers": 0,
+    "source_id": 1
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "faces-detect uten arbeid",
+   "method": "POST",
+   "path": "/api/jobs/faces-detect",
+   "json": {
+    "retry_errors": true,
+    "workers": -2
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "skann kilde 1 (hurtigsjekk)",
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "json": {
+    "source_id": 1
+   },
+   "wait": true
+  },
+  {
+   "name": "jobbstatus med scan-progress",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "skann ukjent kilde",
+   "method": "POST",
+   "path": "/api/jobs/scan",
+   "json": {
+    "source_id": 99
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "retag ett bilde i kilde 1",
+   "method": "POST",
+   "path": "/api/jobs/tag",
+   "json": {
+    "retag": true,
+    "limit": 1,
+    "workers": 1,
+    "source_id": 1
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress",
+   "query": {
+    "source_id": 1
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/api/cost"
+  },
+  {
+   "name": "tag med workers=-1 (ValueError)",
+   "method": "POST",
+   "path": "/api/jobs/tag",
+   "json": {
+    "workers": -1,
+    "limit": 1
+   },
+   "wait": true
+  },
+  {
+   "name": "jobbstatus: ValueError",
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "name": "tag med workers=0 (standard)",
+   "method": "POST",
+   "path": "/api/jobs/tag",
+   "json": {
+    "workers": 0,
+    "limit": 1
+   },
+   "wait": true
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/progress"
+  }
+ ]
+}

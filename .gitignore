@@ -1,0 +1,24 @@
+# Genereres av appen — del av den flyttbare pakka, ikke av repoet
+fotomaxxer.db
+fotomaxxer.db-journal
+fotomaxxer.db-wal
+fotomaxxer.db-shm
+derived/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Node / web
+node_modules/
+web/dist/
+*.tsbuildinfo
+
+# Verktøy
+.DS_Store
+/target

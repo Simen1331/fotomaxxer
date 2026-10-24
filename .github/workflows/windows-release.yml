@@ -1,0 +1,276 @@
+name: Windows-installasjonsprogram
+
+# Fase 7 i docs/rust-port-plan.md: bygg FotoMaxxer-Setup-<versjon>.exe (NSIS, per bruker),
+# installer den stille på runneren, røyktest den installerte appen, avinstaller stille og
+# sjekk at datamappa ble liggende. Setup.exe lastes alltid opp som artefakt; en tagg v*
+# lager i tillegg en GitHub Release (tagger med bindestrek, f.eks. v0.2.0-rc1, blir
+# prerelease).
+#
+# Exe-ene i pakka: fotomaxxer-gui.exe → FotoMaxxer.exe (vindu, uten konsoll) og
+# fotomaxxer.exe → FotoMaxxer-cli.exe, med models\ ved siden av.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  # Bryter for desktop-exe-en fra fase 7A. 'true': pakka bruker fotomaxxer-gui.exe og CI
+  # kjører --smoke på den installerte FotoMaxxer.exe. 'false' (reserve): FotoMaxxer.exe er
+  # en kopi av CLI-en og sjekkes bare med --version.
+  GUI_KLAR: 'true'
+
+jobs:
+  installer:
+    runs-on: windows-2022
+    # Uten cache bygges ORT fra kilde (~84 min). Tagger bruker cachen fra standardgrenen main.
+    timeout-minutes: 300
+    # contents: write trengs bare for releasen på tagg (siste steg).
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versjon (fra taggen eller Cargo.toml)
+        id: versjon
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $v = $env:GITHUB_REF_NAME -replace '^v', ''
+          } else {
+            $m = Select-String -Path Cargo.toml -Pattern '^version\s*=\s*"([^"]+)"' | Select-Object -First 1
+            $v = $m.Matches[0].Groups[1].Value
+          }
+          # VIProductVersion i NSIS må være fire tall: 0.2.0-rc1 → 0.2.0.0
+          $num = (($v -split '[-+]')[0] -split '\.') + @('0', '0', '0', '0') | Select-Object -First 4
+          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "numversion=$($num -join '.')" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "versjon $v ($($num -join '.'))"
+
+      - name: Rust-verktøykjede
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+
+      - name: Node (frontend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Bygg web/dist
+        working-directory: web
+        shell: bash
+        run: |
+          npm ci
+          npm run build
+          # Fontene skal være bakt inn: ingen lenker til Google Fonts i dist.
+          if grep -rlE 'googleapis|gstatic' dist; then echo "eksterne font-URL-er i web/dist"; exit 1; fi
+
+      # Samme nøkkel som rust.yml, så cachen deles.
+      - name: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}\vcpkg-archives
+          key: vcpkg-libheif-de265-x64-windows-static-v1
+
+      - name: libheif via vcpkg (statisk, bare dekoding)
+        shell: pwsh
+        env:
+          VCPKG_BINARY_SOURCES: clear;files,${{ runner.temp }}\vcpkg-archives,readwrite
+        run: |
+          New-Item -ItemType Directory -Force "${{ runner.temp }}\vcpkg-archives" | Out-Null
+          & packaging\windows\install-libheif.ps1
+
+      - name: ONNX Runtime (statisk CRT, bare CPU)
+        uses: ./.github/actions/onnxruntime-static
+
+      - name: Cargo-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-release-windows-2022-${{ hashFiles('Cargo.lock') }}
+
+      - name: Bygg release
+        run: cargo build --release -p fotomaxxer
+
+      - name: Bare systemets DLL-er
+        shell: pwsh
+        run: |
+          $exes = @('target\release\fotomaxxer.exe')
+          if ($env:GUI_KLAR -eq 'true') { $exes += 'target\release\fotomaxxer-gui.exe' }
+          & packaging\windows\check-dependents.ps1 @exes
+
+      - name: Hent ansiktsmodeller (det_10g + w600k_r50)
+        shell: bash
+        run: |
+          curl -sSL "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip" -o buffalo_l.zip
+          mkdir -p models && unzip -j -o buffalo_l.zip "*det_10g.onnx" "*w600k_r50.onnx" -d models
+          ls -la models
+
+      - name: Sett sammen pakkemappa
+        shell: pwsh
+        run: |
+          $p = "$env:RUNNER_TEMP\pakke"
+          New-Item -ItemType Directory -Force "$p\models", "$p\licenses" | Out-Null
+          $gui = if ($env:GUI_KLAR -eq 'true') { 'target\release\fotomaxxer-gui.exe' } else { 'target\release\fotomaxxer.exe' }
+          Copy-Item $gui "$p\FotoMaxxer.exe"
+          Copy-Item target\release\fotomaxxer.exe "$p\FotoMaxxer-cli.exe"
+          Copy-Item models\det_10g.onnx, models\w600k_r50.onnx "$p\models\"
+          Copy-Item packaging\windows\fotomaxxer.ico, packaging\windows\README.txt "$p\"
+          Copy-Item packaging\windows\THIRD-PARTY.txt, web\FONT-LICENSES.txt "$p\licenses\"
+          Copy-Item LICENSE "$p\licenses\FotoMaxxer-LICENSE.txt"
+          Copy-Item "$env:RUNNER_TEMP\ort-static\LICENSE" "$p\licenses\onnxruntime-LICENSE.txt"
+          Copy-Item "$env:RUNNER_TEMP\ort-static\ThirdPartyNotices.txt" "$p\licenses\onnxruntime-ThirdPartyNotices.txt"
+          Get-ChildItem $p -Recurse | Format-Table FullName, Length
+
+      - name: Bygg Setup.exe (NSIS)
+        id: setup
+        shell: pwsh
+        run: |
+          $makensis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
+          if (-not (Test-Path $makensis)) {
+            choco install nsis -y --no-progress
+            $makensis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
+          }
+          & $makensis -VERSION
+          $v = '${{ steps.versjon.outputs.version }}'
+          $out = "$env:RUNNER_TEMP\FotoMaxxer-Setup-$v.exe"
+          & $makensis -V3 -WX "-DVERSION=$v" "-DNUMVERSION=${{ steps.versjon.outputs.numversion }}" `
+            "-DSRCDIR=$env:RUNNER_TEMP\pakke" "-DOUTFILE=$out" packaging\windows\fotomaxxer.nsi
+          if ($LASTEXITCODE -ne 0) { throw "makensis feilet ($LASTEXITCODE)" }
+          $hash = (Get-FileHash $out -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  FotoMaxxer-Setup-$v.exe" | Out-File -Encoding ascii "$out.sha256"
+          Get-Item $out | Format-Table Name, Length
+          Get-Content "$out.sha256"
+          "path=$out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      # Kvoten for artefaktlagring gjelder hele kontoen. Er den brukt opp, skal resten av
+      # testene likevel kjøre (og releasen på tagg laster opp fila direkte).
+      - name: Last opp Setup.exe
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: FotoMaxxer-Setup-${{ steps.versjon.outputs.version }}
+          path: |
+            ${{ steps.setup.outputs.path }}
+            ${{ steps.setup.outputs.path }}.sha256
+          retention-days: 30
+          if-no-files-found: error
+
+      # ---- Installer, røyktest og avinstaller på runneren ----
+
+      - name: Lag en datamappe som avinstalleringen må la være
+        shell: pwsh
+        run: |
+          $data = "$env:LOCALAPPDATA\FotoMaxxer"
+          New-Item -ItemType Directory -Force $data | Out-Null
+          Set-Content -Path "$data\behold-meg.txt" -Value 'brukerdata'
+
+      - name: Installer stille
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath '${{ steps.setup.outputs.path }}' -ArgumentList '/S' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Setup.exe /S avsluttet med $($p.ExitCode)" }
+          $dir = "$env:LOCALAPPDATA\Programs\FotoMaxxer"
+          foreach ($f in 'FotoMaxxer.exe', 'FotoMaxxer-cli.exe', 'uninstall.exe', 'fotomaxxer.ico', 'README.txt',
+                         'models\det_10g.onnx', 'models\w600k_r50.onnx', 'licenses\onnxruntime-LICENSE.txt',
+                         'licenses\FONT-LICENSES.txt') {
+            if (-not (Test-Path "$dir\$f")) { throw "mangler etter installering: $dir\$f" }
+          }
+          $lnk = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\FotoMaxxer.lnk"
+          if (-not (Test-Path $lnk)) { throw "mangler snarvei: $lnk" }
+          $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\FotoMaxxer'
+          $reg = Get-ItemProperty $key
+          $reg | Format-List DisplayName, DisplayVersion, Publisher, DisplayIcon, InstallLocation, UninstallString, QuietUninstallString, EstimatedSize
+          if ($reg.DisplayName -ne 'FotoMaxxer') { throw 'feil DisplayName' }
+          if ($reg.DisplayVersion -ne '${{ steps.versjon.outputs.version }}') { throw 'feil DisplayVersion' }
+          if (-not $reg.Publisher -or -not $reg.DisplayIcon -or $reg.EstimatedSize -lt 1000) { throw 'mangler Publisher/DisplayIcon/EstimatedSize' }
+          Get-ChildItem $dir -Recurse | Format-Table FullName, Length
+
+      - name: Røyktest av installert FotoMaxxer.exe
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $exe = "$env:LOCALAPPDATA\Programs\FotoMaxxer\FotoMaxxer.exe"
+          if ($env:GUI_KLAR -ne 'true') {
+            # Plassholder til fotomaxxer-gui er flettet inn (GUI_KLAR øverst).
+            & $exe --version
+            if ($LASTEXITCODE -ne 0) { throw "FotoMaxxer.exe --version ga $LASTEXITCODE" }
+            exit 0
+          }
+          $rapport = "$env:RUNNER_TEMP\smoke"
+          $bilde = "$env:GITHUB_WORKSPACE\tests\fixtures\astronaut.jpg"
+          $p = Start-Process -FilePath $exe -ArgumentList '--smoke', "`"$rapport`"", '--smoke-image', "`"$bilde`"" -PassThru
+          if (-not $p.WaitForExit(300000)) { $p.Kill(); throw 'røyktesten ble ikke ferdig på 5 minutter' }
+          Write-Host "exit-kode: $($p.ExitCode)"
+          $json = "$rapport\desktop-report.json"
+          if (Test-Path $json) { Get-Content $json -Raw -Encoding utf8 } else { throw "mangler $json" }
+          $r = Get-Content $json -Raw -Encoding utf8 | ConvertFrom-Json
+          if ($p.ExitCode -ne 0 -or -not $r.ok) { throw 'røyktesten feilet' }
+
+      - name: Røyktestens logg og rapport ved feil
+        if: failure() && env.GUI_KLAR == 'true'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: FotoMaxxer-smoke-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/smoke/**/*.json
+            ${{ runner.temp }}/smoke/**/*.log
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Installert FotoMaxxer-cli.exe (init, kilde, scan, derive, ansikter)
+        shell: pwsh
+        run: |
+          $cli = "$env:LOCALAPPDATA\Programs\FotoMaxxer\FotoMaxxer-cli.exe"
+          $home_ = "$env:RUNNER_TEMP\cli-bibliotek"
+          $bilder = "$env:RUNNER_TEMP\cli-bilder"
+          New-Item -ItemType Directory -Force $bilder | Out-Null
+          Copy-Item tests\fixtures\astronaut.jpg $bilder
+          function kjor { & $cli --home $home_ @args; if ($LASTEXITCODE -ne 0) { throw "FotoMaxxer-cli $args ga $LASTEXITCODE" } }
+          & $cli --version
+          if ($LASTEXITCODE -ne 0) { throw '--version feilet' }
+          kjor init
+          kjor source add $bilder
+          kjor source list
+          kjor scan --all
+          kjor derive
+          # Ansiktsmodellene leses fra <exe>\models, og ONNX Runtime er lenket inn i exe-en.
+          $ut = kjor faces detect --workers 1
+          Write-Host $ut
+          if ("$ut" -notmatch 'ansikter=[1-9]' -or "$ut" -notmatch 'feil=0') { throw "ventet ansikter og ingen feil: $ut" }
+
+      - name: Avinstaller stille og sjekk at datamappa ble liggende
+        shell: pwsh
+        run: |
+          $dir = "$env:LOCALAPPDATA\Programs\FotoMaxxer"
+          $p = Start-Process -FilePath "$dir\uninstall.exe" -ArgumentList '/S' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "uninstall.exe /S avsluttet med $($p.ExitCode)" }
+          # NSIS-avinstalleren kopierer seg selv til TEMP og fortsetter der; vent på den.
+          for ($i = 0; $i -lt 120 -and (Test-Path $dir); $i++) { Start-Sleep -Milliseconds 500 }
+          if (Test-Path $dir) { Get-ChildItem $dir -Recurse | Format-Table FullName; throw "programmappa finnes fortsatt: $dir" }
+          if (Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\FotoMaxxer.lnk") { throw 'snarveien finnes fortsatt' }
+          if (Test-Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\FotoMaxxer') { throw 'registeroppføringen finnes fortsatt' }
+          $data = "$env:LOCALAPPDATA\FotoMaxxer"
+          if ((Get-Content "$data\behold-meg.txt" -ErrorAction Stop) -ne 'brukerdata') { throw 'datamappa ble endret' }
+          if (-not (Test-Path "$env:RUNNER_TEMP\cli-bibliotek\fotomaxxer.db")) { throw 'CLI-biblioteket forsvant' }
+          Get-ChildItem $data -Recurse | Format-Table FullName, Length
+          Write-Host 'Avinstallert; datamappa er urørt.'
+
+      - name: GitHub Release (bare på tagg v*)
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $out = '${{ steps.setup.outputs.path }}'
+          $flagg = @('--title', "FotoMaxxer ${{ steps.versjon.outputs.version }}", '--generate-notes', '--verify-tag')
+          if ($env:GITHUB_REF_NAME -like '*-*') { $flagg += '--prerelease' }
+          gh release create $env:GITHUB_REF_NAME $out "$out.sha256" -R $env:GITHUB_REPOSITORY @flagg
+          if ($LASTEXITCODE -ne 0) { throw "gh release create feilet ($LASTEXITCODE)" }

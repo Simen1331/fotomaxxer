@@ -1,0 +1,7 @@
+# Statisk C-runtime på Windows (fase 7): exe-ene skal ikke trenge VCRUNTIME140.dll eller
+# MSVCP140.dll, som mangler på noen rene maskiner. Alt som lenkes inn må da også være
+# bygd med /MT: libheif via vcpkg-tripletten x64-windows-static, og ONNX Runtime fra
+# packaging/windows/build-onnxruntime.ps1 (ORT_LIB_PATH), siden pykes prebygde
+# bibliotek er /MD. Se «Fase 7B (pakking)» i docs/rust-port-plan.md.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

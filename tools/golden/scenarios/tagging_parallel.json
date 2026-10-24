@@ -1,0 +1,16 @@
+[
+  {"argv": ["tag"]},
+  {"argv": ["settings", "set", "openrouter_api_key", "sk-or-v1-falsk-0123456789"]},
+  {"argv": ["settings", "set", "ai_model", "test/fake-vision"]},
+  {"argv": ["tag", "--limit", "5", "--workers", "2"]},
+  {"argv": ["tag"]},
+  {"argv": ["tag", "--workers", "0"]},
+  {"argv": ["settings", "set", "default_profile_id", "3"]},
+  {"argv": ["tag", "--retag"], "stdin": "nei\n"},
+  {"argv": ["tag", "--limit", "3", "--workers", "4"]},
+  {"argv": ["tag"], "stdin": " JA \n"},
+  {"argv": ["tag", "--workers", "-1"]},
+  {"argv": ["tag", "--retag"], "stdin": "\n"},
+  {"argv": ["tag", "--yes", "--workers", "12"]},
+  {"argv": ["settings", "list"]}
+]
